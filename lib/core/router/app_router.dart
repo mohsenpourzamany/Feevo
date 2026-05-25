@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-// ignore: unused_import
-import 'package:provider/provider.dart';
-
-// screens رو بعداً import می‌کنیم
-// import '../../screens/...';
+import '../../screens/auth/splash_screen.dart';
+import '../../screens/auth/login_screen.dart';
+import '../../screens/auth/register_screen.dart';
+import '../../screens/auth/forgot_password_screen.dart';
+import '../../screens/auth/verify_email_screen.dart';
+import '../../screens/onboarding/onboarding_screen.dart';
+import '../../screens/onboarding/genre_pick_screen.dart';
+import '../../screens/home/home_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
-  static const String onboarding = '/onboarding';
-  static const String genrePick = '/onboarding/genre';
   static const String login = '/login';
   static const String register = '/register';
   static const String forgotPass = '/forgot-password';
   static const String verifyEmail = '/verify-email';
+  static const String onboarding = '/onboarding';
+  static const String genrePick = '/genre-pick';
   static const String home = '/home';
   static const String search = '/search';
   static const String moodFlow = '/mood-flow';
@@ -39,24 +42,60 @@ class AppRoutes {
 final GoRouter appRouter = GoRouter(
   initialLocation: AppRoutes.splash,
   debugLogDiagnostics: true,
+  errorBuilder: (context, state) => Scaffold(
+    backgroundColor: const Color(0xFF06060F),
+    body: Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text('Coming soon...', style: TextStyle(color: Colors.white70)),
+          const SizedBox(height: 8),
+          Text(state.uri.toString(),
+              style: const TextStyle(color: Colors.white30, fontSize: 11)),
+        ],
+      ),
+    ),
+  ),
   routes: [
     GoRoute(
       path: AppRoutes.splash,
       name: 'splash',
-      builder: (context, state) => const Scaffold(
-        backgroundColor: Color(0xFF06060F),
-        body: Center(
-          child: Text(
-            'feevo',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 38,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
-      ),
+      builder: (context, state) => const SplashScreen(),
     ),
-    // بقیه routes رو وقتی screens ساختیم اضافه می‌کنیم
+    GoRoute(
+      path: AppRoutes.login,
+      name: 'login',
+      builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.register,
+      name: 'register',
+      builder: (context, state) => const RegisterScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.forgotPass,
+      name: 'forgot-password',
+      builder: (context, state) => const ForgotPasswordScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.verifyEmail,
+      name: 'verify-email',
+      builder: (context, state) => const VerifyEmailScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.onboarding,
+      name: 'onboarding',
+      builder: (context, state) => const OnboardingScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.genrePick,
+      name: 'genre-pick',
+      builder: (context, state) => const GenrePickScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.home,
+      name: 'home',
+      builder: (context, state) => const HomeScreen(),
+    ),
   ],
 );
