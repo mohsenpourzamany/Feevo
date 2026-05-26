@@ -38,6 +38,9 @@ dependencies:
   # Utils
   shared_preferences: ^2.2.3
 
+  # Share
+  share_plus: ^7.2.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -49,7 +52,7 @@ flutter:
   assets:
     - assets/images/cats/
     - assets/images/
-
+    - assets/images/flags/
   fonts:
     - family: Poppins
       fonts:
