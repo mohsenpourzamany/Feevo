@@ -9,6 +9,8 @@ import '../../screens/onboarding/onboarding_screen.dart';
 import '../../screens/onboarding/genre_pick_screen.dart';
 import '../../screens/home/home_screen.dart';
 import '../../screens/music/search_screen.dart';
+import '../../screens/music/artist_profile_screen.dart';
+import '../../screens/music/playlist_detail_screen.dart';
 import '../../screens/mood_flow/mood_flow_screen.dart';
 import '../../screens/player/now_playing_screen.dart';
 import '../../screens/player/lyrics_screen.dart';
@@ -17,6 +19,7 @@ import '../../screens/live_room/live_rooms_screen.dart';
 import '../../screens/live_room/live_room_inside_screen.dart';
 import '../../screens/live_room/create_room_screen.dart';
 import '../../screens/memory_map/memory_map_screen.dart';
+import '../../screens/memory_map/memory_detail_screen.dart';
 import '../../screens/profile/profile_screen.dart';
 import '../../screens/profile/settings_screen.dart';
 import '../../screens/profile/premium_screen.dart';
@@ -37,9 +40,12 @@ class AppRoutes {
   static const String liveRoomIn = '/live-room-inside';
   static const String createRoom = '/live-rooms/create';
   static const String memoryMap = '/memory-map';
+  static const String memoryDetail = '/memory-detail';
   static const String nowPlaying = '/player';
   static const String lyrics = '/player/lyrics';
   static const String queue = '/player/queue';
+  static const String artist = '/artist';
+  static const String playlist = '/playlist';
   static const String profile = '/profile';
   static const String editProfile = '/profile/edit';
   static const String premium = '/premium';
@@ -119,6 +125,14 @@ final GoRouter appRouter = GoRouter(
         name: 'queue',
         builder: (c, s) => const QueueScreen()),
     GoRoute(
+        path: AppRoutes.artist,
+        name: 'artist',
+        builder: (c, s) => const ArtistProfileScreen()),
+    GoRoute(
+        path: AppRoutes.playlist,
+        name: 'playlist',
+        builder: (c, s) => const PlaylistDetailScreen()),
+    GoRoute(
         path: AppRoutes.liveRooms,
         name: 'live-rooms',
         builder: (c, s) => const LiveRoomsScreen()),
@@ -134,6 +148,10 @@ final GoRouter appRouter = GoRouter(
         path: AppRoutes.memoryMap,
         name: 'memory-map',
         builder: (c, s) => const MemoryMapScreen()),
+    GoRoute(
+        path: AppRoutes.memoryDetail,
+        name: 'memory-detail',
+        builder: (c, s) => const MemoryDetailScreen()),
     GoRoute(
         path: AppRoutes.profile,
         name: 'profile',

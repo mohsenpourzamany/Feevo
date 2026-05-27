@@ -592,104 +592,128 @@ class _MoodFlowScreenState extends State<MoodFlowScreen>
             children: List.generate(_playlist.length, (i) {
               final track = _playlist[i];
               final isFirst = i == 0;
-              return Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                decoration: BoxDecoration(
-                  gradient: isFirst
-                      ? LinearGradient(
-                          colors: [
-                            _moodColor.withOpacity(0.15),
-                            AppColors.cyan.withOpacity(0.06),
-                          ],
-                        )
-                      : null,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(isFirst ? 18 : 0),
-                    topRight: Radius.circular(isFirst ? 18 : 0),
-                    bottomLeft:
-                        Radius.circular(i == _playlist.length - 1 ? 18 : 0),
-                    bottomRight:
-                        Radius.circular(i == _playlist.length - 1 ? 18 : 0),
+              return GestureDetector(
+                onTap: () => context.push(AppRoutes.nowPlaying),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: isFirst
+                        ? LinearGradient(
+                            colors: [
+                              _moodColor.withOpacity(0.15),
+                              AppColors.cyan.withOpacity(0.06),
+                            ],
+                          )
+                        : null,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(isFirst ? 18 : 0),
+                      topRight: Radius.circular(isFirst ? 18 : 0),
+                      bottomLeft:
+                          Radius.circular(i == _playlist.length - 1 ? 18 : 0),
+                      bottomRight:
+                          Radius.circular(i == _playlist.length - 1 ? 18 : 0),
+                    ),
+                    border: i < _playlist.length - 1
+                        ? const Border(
+                            bottom: BorderSide(color: AppColors.border))
+                        : null,
                   ),
-                  border: i < _playlist.length - 1
-                      ? const Border(
-                          bottom: BorderSide(color: AppColors.border))
-                      : null,
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      '${i + 1}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isFirst ? AppColors.cyan2 : AppColors.textThird,
-                        fontWeight: FontWeight.w600,
+                  child: Row(
+                    children: [
+                      Text(
+                        '${i + 1}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color:
+                              isFirst ? AppColors.cyan2 : AppColors.textThird,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(9),
-                        gradient: LinearGradient(
-                          colors: [
-                            _moodColor.withOpacity(0.6),
-                            AppColors.purple.withOpacity(0.4),
+                      const SizedBox(width: 10),
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(9),
+                          gradient: LinearGradient(
+                            colors: [
+                              _moodColor.withOpacity(0.6),
+                              AppColors.purple.withOpacity(0.4),
+                            ],
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(track['emoji']!,
+                              style: const TextStyle(fontSize: 16)),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              track['title']!,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: isFirst
+                                    ? AppColors.textPrimary
+                                    : AppColors.textPrimary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              track['artist']!,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: AppColors.textSecond,
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                      child: Center(
-                        child: Text(track['emoji']!,
-                            style: const TextStyle(fontSize: 16)),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            track['title']!,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: isFirst
-                                  ? AppColors.textPrimary
-                                  : AppColors.textPrimary,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                      if (isFirst)
+                        _WaveIndicator()
+                      else
+                        Text(
+                          track['duration']!,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: AppColors.textThird,
                           ),
-                          Text(
-                            track['artist']!,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: AppColors.textSecond,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (isFirst)
-                      _WaveIndicator()
-                    else
-                      Text(
-                        track['duration']!,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: AppColors.textThird,
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             }),
           ),
         ),
-
+        GestureDetector(
+          onTap: () => context.push(AppRoutes.playlist),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: const Center(
+              child: Text(
+                'View Full Playlist →',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.purple3,
+                ),
+              ),
+            ),
+          ),
+        ),
         const SizedBox(height: 12),
-
         // regenerate button
         GestureDetector(
           onTap: () => setState(() => _isGenerated = false),

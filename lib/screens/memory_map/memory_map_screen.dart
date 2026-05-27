@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/widgets/bottom_nav_widget.dart';
@@ -328,11 +330,11 @@ class _MemoryMapScreenState extends State<MemoryMapScreen>
                                   fit: BoxFit.contain,
                                 ),
                                 const SizedBox(width: 12),
-                                Expanded(
+                                const Expanded(
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
-                                    children: const [
+                                    children: [
                                       Text(
                                         '🤖 AI Insight',
                                         style: TextStyle(
@@ -376,7 +378,7 @@ class _MemoryMapScreenState extends State<MemoryMapScreen>
                                 emoji: '▶️',
                               ),
                               const SizedBox(width: 10),
-                              _StatCard(
+                              const _StatCard(
                                 value: '4',
                                 label: 'Moods',
                                 emoji: '🎭',
@@ -444,7 +446,8 @@ class _MemoryMapScreenState extends State<MemoryMapScreen>
                           ..._filteredMemories.map((memory) => Padding(
                                 padding: const EdgeInsets.only(bottom: 12),
                                 child: GestureDetector(
-                                  onTap: () {},
+                                  onTap: () =>
+                                      context.push(AppRoutes.memoryDetail),
                                   child: Container(
                                     padding: const EdgeInsets.all(14),
                                     decoration: BoxDecoration(

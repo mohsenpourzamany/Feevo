@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/widgets/bottom_nav_widget.dart';
@@ -386,7 +388,7 @@ class _SearchScreenState extends State<SearchScreen>
             final cat = _categories[i];
             final colors = cat['colors'] as List<Color>;
             return GestureDetector(
-              onTap: () {},
+              onTap: () => context.push(AppRoutes.artist),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 decoration: BoxDecoration(
@@ -637,7 +639,7 @@ class _SearchScreenState extends State<SearchScreen>
                         ],
                       ),
                     ),
-                    Icon(Icons.play_circle_outline_rounded,
+                    const Icon(Icons.play_circle_outline_rounded,
                         color: AppColors.purple3, size: 26),
                   ],
                 ),
