@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/router/app_router.dart';
@@ -14,7 +15,6 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
-
   late AnimationController _logoController;
   late AnimationController _catController;
   late AnimationController _textController;
@@ -104,17 +104,22 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _navigate() async {
     if (!mounted) return;
+
+    // Supabase session چک می‌کنیم — نه SharedPreferences token
+    final session = Supabase.instance.client.auth.currentSession;
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString(AppConstants.keyToken);
+    final isOnboarded = prefs.getBool(AppConstants.keyOnboarded) ?? false;
 
     if (!mounted) return;
 
-    // فقط token چک می‌کنیم
-    // اگه لاگین بود → home
-    // اگه نبود → login
-    if (token != null) {
+    if (session != null) {
+      // session داره → مستقیم home
       context.go(AppRoutes.home);
+    } else if (!isOnboarded) {
+      // اولین بار → onboarding
+      context.go(AppRoutes.onboarding);
     } else {
+      // قبلاً onboarding دیده → login
       context.go(AppRoutes.login);
     }
   }
@@ -137,13 +142,15 @@ class _SplashScreenState extends State<SplashScreen>
         children: [
           Positioned.fill(child: CustomPaint(painter: _GridPainter())),
           Positioned(
-            top: -150, left: -100,
+            top: -150,
+            left: -100,
             child: AnimatedBuilder(
               animation: _orbScale,
               builder: (_, __) => Transform.scale(
                 scale: _orbScale.value,
                 child: Container(
-                  width: 500, height: 500,
+                  width: 500,
+                  height: 500,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(colors: [
@@ -156,9 +163,11 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ),
           Positioned(
-            bottom: -80, right: -80,
+            bottom: -80,
+            right: -80,
             child: Container(
-              width: 350, height: 350,
+              width: 350,
+              height: 350,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(colors: [
@@ -203,32 +212,34 @@ class _SplashScreenState extends State<SplashScreen>
           child: Column(
             children: [
               Container(
-                width: 72, height: 80,
+                width: 72,
+                height: 80,
                 decoration: BoxDecoration(
                   gradient: AppColors.primaryGradient,
                   borderRadius: const BorderRadius.only(
-                    topLeft:     Radius.circular(36),
-                    topRight:    Radius.circular(36),
-                    bottomLeft:  Radius.circular(40),
+                    topLeft: Radius.circular(36),
+                    topRight: Radius.circular(36),
+                    bottomLeft: Radius.circular(40),
                     bottomRight: Radius.circular(40),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color:        AppColors.purple.withOpacity(0.6),
-                      blurRadius:   40,
+                      color: AppColors.purple.withOpacity(0.6),
+                      blurRadius: 40,
                       spreadRadius: 4,
                     ),
                   ],
                 ),
                 child: Center(
                   child: Container(
-                    width: 18, height: 18,
+                    width: 18,
+                    height: 18,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.white.withOpacity(0.92),
                       boxShadow: [
                         BoxShadow(
-                          color:      Colors.white.withOpacity(0.8),
+                          color: Colors.white.withOpacity(0.8),
                           blurRadius: 16,
                         ),
                       ],
@@ -243,9 +254,9 @@ class _SplashScreenState extends State<SplashScreen>
                 child: const Text(
                   'feevo',
                   style: TextStyle(
-                    fontSize:      44,
-                    fontWeight:    FontWeight.w800,
-                    color:         Colors.white,
+                    fontSize: 44,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
                     letterSpacing: -2,
                   ),
                 ),
@@ -265,10 +276,10 @@ class _SplashScreenState extends State<SplashScreen>
         child: const Text(
           'Feel the music. Live the vibe.',
           style: TextStyle(
-            fontSize:      12,
-            color:         AppColors.textSecond,
+            fontSize: 12,
+            color: AppColors.textSecond,
             letterSpacing: 1.5,
-            fontWeight:    FontWeight.w400,
+            fontWeight: FontWeight.w400,
           ),
         ),
       ),
@@ -286,16 +297,17 @@ class _SplashScreenState extends State<SplashScreen>
             decoration: BoxDecoration(
               boxShadow: [
                 BoxShadow(
-                  color:      AppColors.purple.withOpacity(0.5),
+                  color: AppColors.purple.withOpacity(0.5),
                   blurRadius: 40,
-                  offset:     const Offset(0, 12),
+                  offset: const Offset(0, 12),
                 ),
               ],
             ),
             child: Image.asset(
               AppConstants.cat1,
-              width: 220, height: 220,
-              fit:   BoxFit.contain,
+              width: 220,
+              height: 220,
+              fit: BoxFit.contain,
             ),
           ),
         ),
@@ -311,14 +323,15 @@ class _SplashScreenState extends State<SplashScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(3, (i) {
             final delay = i * 0.3;
-            final t     = (_floatController.value - delay).clamp(0.0, 1.0);
+            final t = (_floatController.value - delay).clamp(0.0, 1.0);
             final scale = 0.5 + (0.5 * (1 - (2 * t - 1).abs()));
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Transform.scale(
                 scale: scale,
                 child: Container(
-                  width: 7, height: 7,
+                  width: 7,
+                  height: 7,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: AppColors.purple2.withOpacity(0.8),
@@ -337,7 +350,7 @@ class _GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color       = AppColors.purple.withOpacity(0.04)
+      ..color = AppColors.purple.withOpacity(0.04)
       ..strokeWidth = 1;
     const step = 44.0;
     for (double x = 0; x < size.width; x += step) {
@@ -347,6 +360,7 @@ class _GridPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
     }
   }
+
   @override
   bool shouldRepaint(_GridPainter old) => false;
 }

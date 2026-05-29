@@ -15,49 +15,52 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen>
     with TickerProviderStateMixin {
-
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
   late AnimationController _floatController;
-  late Animation<double>   _floatAnim;
+  late Animation<double> _floatAnim;
 
   late AnimationController _entranceController;
-  late Animation<double>   _entranceScale;
-  late Animation<double>   _entranceOpacity;
+  late Animation<double> _entranceScale;
+  late Animation<double> _entranceOpacity;
 
   static const List<_PageData> _pages = [
     _PageData(
-      catAsset:    AppConstants.cat2,
-      title:       'Music that ',
+      catAsset: AppConstants.cat2,
+      title: 'Music that ',
       titleAccent: 'feels you',
-      titleEnd:    ' 🎵',
-      desc: 'Feevo transforms your music experience — based on your mood, memories, and moments.',
-      cta:  "Let's Go ✨",
+      titleEnd: ' 🎵',
+      desc:
+          'Feevo transforms your music experience — based on your mood, memories, and moments.',
+      cta: "Let's Go ✨",
     ),
     _PageData(
-      catAsset:    AppConstants.cat3,
-      title:       '',
+      catAsset: AppConstants.cat3,
+      title: '',
       titleAccent: 'Mood Flow',
-      titleEnd:    ' 🌊',
-      desc: 'Tell us how you feel — AI builds your perfect musical journey, just for this moment.',
-      cta:  'Sounds Amazing →',
+      titleEnd: ' 🌊',
+      desc:
+          'Tell us how you feel — AI builds your perfect musical journey, just for this moment.',
+      cta: 'Sounds Amazing →',
     ),
     _PageData(
-      catAsset:    AppConstants.cat1,
-      title:       '',
+      catAsset: AppConstants.cat1,
+      title: '',
       titleAccent: 'Live Rooms',
-      titleEnd:    ' 🏠',
-      desc: 'Listen with thousands simultaneously — AI DJ curates tracks based on crowd reactions.',
-      cta:  'Join the Vibe →',
+      titleEnd: ' 🏠',
+      desc:
+          'Listen with thousands simultaneously — AI DJ curates tracks based on crowd reactions.',
+      cta: 'Join the Vibe →',
     ),
     _PageData(
-      catAsset:    AppConstants.cat6,
-      title:       '',
+      catAsset: AppConstants.cat6,
+      title: '',
       titleAccent: 'Memory Map',
-      titleEnd:    ' 🗺️',
-      desc: 'AI builds your musical memory map — when, where, and how you felt.',
-      cta:  "That's Beautiful ✨",
+      titleEnd: ' 🗺️',
+      desc:
+          'AI builds your musical memory map — when, where, and how you felt.',
+      cta: "That's Beautiful ✨",
     ),
   ];
 
@@ -104,7 +107,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     if (_currentPage < _pages.length - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 400),
-        curve:    Curves.easeInOutCubic,
+        curve: Curves.easeInOutCubic,
       );
     } else {
       _finish();
@@ -115,7 +118,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(AppConstants.keyOnboarded, true);
     if (!mounted) return;
-    context.go(AppRoutes.genrePick);
+    context.go(AppRoutes.login); // onboarding تموم → login
   }
 
   @override
@@ -126,9 +129,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         children: [
           Positioned.fill(child: CustomPaint(painter: _GridPainter())),
           Positioned(
-            top: -150, left: -100,
+            top: -150,
+            left: -100,
             child: Container(
-              width: 500, height: 500,
+              width: 500,
+              height: 500,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(colors: [
@@ -139,9 +144,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             ),
           ),
           Positioned(
-            bottom: -80, right: -80,
+            bottom: -80,
+            right: -80,
             child: Container(
-              width: 350, height: 350,
+              width: 350,
+              height: 350,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(colors: [
@@ -154,7 +161,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           SafeArea(
             child: Column(
               children: [
-                // counter + skip
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 14, 24, 0),
                   child: Row(
@@ -163,8 +169,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       Text(
                         '${_currentPage + 1} / ${_pages.length}',
                         style: const TextStyle(
-                          fontSize:   12,
-                          color:      AppColors.textThird,
+                          fontSize: 12,
+                          color: AppColors.textThird,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -172,18 +178,19 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         GestureDetector(
                           onTap: _finish,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
                             decoration: BoxDecoration(
-                              color:        AppColors.surface,
+                              color: AppColors.surface,
                               borderRadius: BorderRadius.circular(999),
-                              border:       Border.all(color: AppColors.border),
+                              border: Border.all(color: AppColors.border),
                             ),
                             child: const Text(
                               'Skip',
                               style: TextStyle(
-                                fontSize:   12,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color:      AppColors.textSecond,
+                                color: AppColors.textSecond,
                               ),
                             ),
                           ),
@@ -193,18 +200,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     ],
                   ),
                 ),
-
-                // page view
                 Expanded(
                   child: PageView.builder(
-                    controller:    _pageController,
+                    controller: _pageController,
                     onPageChanged: _onPageChanged,
-                    itemCount:     _pages.length,
-                    itemBuilder:   (context, index) => _buildPage(_pages[index]),
+                    itemCount: _pages.length,
+                    itemBuilder: (context, index) => _buildPage(_pages[index]),
                   ),
                 ),
-
-                // dots + button
                 Padding(
                   padding: const EdgeInsets.fromLTRB(28, 8, 28, 40),
                   child: Column(
@@ -215,13 +218,16 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           final active = i == _currentPage;
                           return AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
-                            margin:   const EdgeInsets.symmetric(horizontal: 4),
-                            width:    active ? 28 : 8,
-                            height:   4,
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            width: active ? 28 : 8,
+                            height: 4,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(999),
-                              gradient: active ? AppColors.primaryGradient : null,
-                              color:    active ? null : AppColors.textThird.withOpacity(0.4),
+                              gradient:
+                                  active ? AppColors.primaryGradient : null,
+                              color: active
+                                  ? null
+                                  : AppColors.textThird.withOpacity(0.4),
                             ),
                           );
                         }),
@@ -245,12 +251,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   Widget _buildPage(_PageData page) {
     return Column(
       children: [
-        // cat
         Expanded(
           flex: 55,
           child: Center(
             child: AnimatedBuilder(
-              animation: Listenable.merge([_entranceController, _floatController]),
+              animation:
+                  Listenable.merge([_entranceController, _floatController]),
               builder: (context, _) {
                 return Opacity(
                   opacity: _entranceOpacity.value,
@@ -262,17 +268,18 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         decoration: BoxDecoration(
                           boxShadow: [
                             BoxShadow(
-                              color:        AppColors.purple.withOpacity(0.4),
-                              blurRadius:   60,
+                              color: AppColors.purple.withOpacity(0.4),
+                              blurRadius: 60,
                               spreadRadius: 8,
-                              offset:       const Offset(0, 20),
+                              offset: const Offset(0, 20),
                             ),
                           ],
                         ),
                         child: Image.asset(
                           page.catAsset,
-                          width: 260, height: 260,
-                          fit:   BoxFit.contain,
+                          width: 260,
+                          height: 260,
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ),
@@ -282,8 +289,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             ),
           ),
         ),
-
-        // text
         Expanded(
           flex: 45,
           child: Padding(
@@ -296,33 +301,42 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     children: [
                       if (page.title.isNotEmpty)
                         TextSpan(
-                          text:  page.title,
+                          text: page.title,
                           style: const TextStyle(
-                            fontSize: 26, fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary, letterSpacing: -0.5, height: 1.2,
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                            letterSpacing: -0.5,
+                            height: 1.2,
                           ),
                         ),
                       WidgetSpan(
                         alignment: PlaceholderAlignment.baseline,
-                        baseline:  TextBaseline.alphabetic,
+                        baseline: TextBaseline.alphabetic,
                         child: ShaderMask(
                           shaderCallback: (bounds) =>
                               AppColors.primaryGradient.createShader(bounds),
                           child: Text(
                             page.titleAccent,
                             style: const TextStyle(
-                              fontSize: 26, fontWeight: FontWeight.w800,
-                              color: Colors.white, letterSpacing: -0.5, height: 1.2,
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              letterSpacing: -0.5,
+                              height: 1.2,
                             ),
                           ),
                         ),
                       ),
                       if (page.titleEnd.isNotEmpty)
                         TextSpan(
-                          text:  page.titleEnd,
+                          text: page.titleEnd,
                           style: const TextStyle(
-                            fontSize: 26, fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary, letterSpacing: -0.5, height: 1.2,
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                            letterSpacing: -0.5,
+                            height: 1.2,
                           ),
                         ),
                     ],
@@ -333,8 +347,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   page.desc,
                   style: const TextStyle(
                     fontSize: 13,
-                    color:    AppColors.textSecond,
-                    height:   1.8,
+                    color: AppColors.textSecond,
+                    height: 1.8,
                   ),
                 ),
               ],
@@ -349,20 +363,30 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 class _PageData {
   final String catAsset, title, titleAccent, titleEnd, desc, cta;
   const _PageData({
-    required this.catAsset, required this.title,
-    required this.titleAccent, required this.titleEnd,
-    required this.desc, required this.cta,
+    required this.catAsset,
+    required this.title,
+    required this.titleAccent,
+    required this.titleEnd,
+    required this.desc,
+    required this.cta,
   });
 }
 
 class _GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = AppColors.purple.withOpacity(0.04)..strokeWidth = 1;
+    final paint = Paint()
+      ..color = AppColors.purple.withOpacity(0.04)
+      ..strokeWidth = 1;
     const step = 44.0;
-    for (double x = 0; x < size.width; x += step) { canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint); }
-    for (double y = 0; y < size.height; y += step) { canvas.drawLine(Offset(0, y), Offset(size.width, y), paint); }
+    for (double x = 0; x < size.width; x += step) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    for (double y = 0; y < size.height; y += step) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
   }
+
   @override
   bool shouldRepaint(_GridPainter old) => false;
 }

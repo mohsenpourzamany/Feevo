@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/router/app_router.dart';
 import '../../core/widgets/bottom_nav_widget.dart';
+import '../../core/services/audio_player_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,13 +26,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late Animation<double> _contentOpacity;
   late Animation<Offset> _contentSlide;
 
-  bool _isPlaying = true;
-
   @override
   void initState() {
     super.initState();
     _setupAnimations();
     _playEntrance();
+    // load demo tracks on startup
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final service = context.read<AudioPlayerService>();
+      if (service.currentTrack == null) {
+        service.playQueue(FeevoTrack.mockTracks);
+      }
+    });
   }
 
   void _setupAnimations() {
@@ -139,10 +146,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         children: [
                           _buildGreeting(),
                           const SizedBox(height: 16),
-                          GestureDetector(
-                            onTap: () => context.push(AppRoutes.nowPlaying),
-                            child: _buildNowPlaying(),
-                          ),
+                          _buildNowPlaying(),
                           const SizedBox(height: 20),
                           _buildMoodStrip(),
                           const SizedBox(height: 20),
@@ -242,176 +246,260 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ],
           ),
         ),
-        Stack(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: const Icon(Icons.notifications_outlined,
-                  color: AppColors.textSecond, size: 20),
-            ),
-            Positioned(
-              top: 8,
-              right: 8,
-              child: Container(
-                width: 7,
-                height: 7,
+        GestureDetector(
+          onTap: () => context.push(AppRoutes.notifications),
+          child: Stack(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: AppColors.purple,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.bg, width: 1.5),
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: const Icon(Icons.notifications_outlined,
+                    color: AppColors.textSecond, size: 20),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: AppColors.purple,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.bg, width: 1.5),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
   }
 
   Widget _buildNowPlaying() {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.purple.withOpacity(0.22),
-            AppColors.cyan.withOpacity(0.1),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.border2),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              AnimatedBuilder(
-                animation: _vinylController,
-                builder: (_, child) => Transform.rotate(
-                  angle: _isPlaying ? _vinylController.value * 2 * 3.14159 : 0,
-                  child: child,
-                ),
-                child: Container(
-                  width: 54,
-                  height: 54,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const SweepGradient(colors: [
-                      Color(0xFF1a1a2e),
-                      Color(0xFF7C3AED),
-                      Color(0xFF9D5CF6),
-                      Color(0xFF2a1f4a),
-                      Color(0xFF4a2f8a),
-                      Color(0xFF6d40cc),
-                      Color(0xFF1a1230),
-                      Color(0xFF3a2060),
-                      Color(0xFF7C3AED),
-                      Color(0xFF1a0d30),
-                      Color(0xFF1a1a2e),
-                    ]),
-                    boxShadow: [
-                      BoxShadow(
-                          color: AppColors.purple.withOpacity(0.5),
-                          blurRadius: 16)
-                    ],
-                  ),
-                  child: Center(
-                    child: Container(
-                      width: 10,
-                      height: 10,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                            colors: [AppColors.purple3, AppColors.purple]),
+    return Consumer<AudioPlayerService>(
+      builder: (context, service, _) {
+        final track = service.currentTrack;
+        final isPlaying = service.isPlaying;
+
+        // sync vinyl
+        if (isPlaying && !_vinylController.isAnimating) {
+          _vinylController.repeat();
+        } else if (!isPlaying && _vinylController.isAnimating) {
+          _vinylController.stop();
+        }
+
+        return GestureDetector(
+          onTap: () => context.push(AppRoutes.nowPlaying),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.purple.withOpacity(0.22),
+                  AppColors.cyan.withOpacity(0.1),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: AppColors.border2),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    AnimatedBuilder(
+                      animation: _vinylController,
+                      builder: (_, child) => Transform.rotate(
+                        angle: isPlaying
+                            ? _vinylController.value * 2 * 3.14159
+                            : 0,
+                        child: child,
+                      ),
+                      child: Container(
+                        width: 54,
+                        height: 54,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const SweepGradient(colors: [
+                            Color(0xFF1a1a2e),
+                            Color(0xFF7C3AED),
+                            Color(0xFF9D5CF6),
+                            Color(0xFF2a1f4a),
+                            Color(0xFF4a2f8a),
+                            Color(0xFF6d40cc),
+                            Color(0xFF1a1230),
+                            Color(0xFF3a2060),
+                            Color(0xFF7C3AED),
+                            Color(0xFF1a0d30),
+                            Color(0xFF1a1a2e),
+                          ]),
+                          boxShadow: [
+                            BoxShadow(
+                                color: AppColors.purple.withOpacity(0.5),
+                                blurRadius: 16)
+                          ],
+                        ),
+                        child: Center(
+                          child: Container(
+                            width: 10,
+                            height: 10,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: RadialGradient(colors: [
+                                AppColors.purple3,
+                                AppColors.purple
+                              ]),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('▶ NOW PLAYING',
-                        style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.cyan2,
-                            letterSpacing: 2)),
-                    SizedBox(height: 3),
-                    Text('Midnight City',
-                        style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary),
-                        overflow: TextOverflow.ellipsis),
-                    Text('M83 · Electronic',
-                        style: TextStyle(
-                            fontSize: 11, color: AppColors.textSecond)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('▶ NOW PLAYING',
+                              style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.cyan2,
+                                  letterSpacing: 2)),
+                          const SizedBox(height: 3),
+                          Text(
+                            track?.title ?? 'No track',
+                            style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            track != null
+                                ? '${track.artist} · ${track.album}'
+                                : '',
+                            style: const TextStyle(
+                                fontSize: 11, color: AppColors.textSecond),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _WaveIndicator(isPlaying: isPlaying),
                   ],
                 ),
-              ),
-              _WaveIndicator(isPlaying: _isPlaying),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const _ProgressBar(progress: 0.38),
-          const SizedBox(height: 6),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('1:48',
-                  style: TextStyle(fontSize: 9, color: AppColors.textThird)),
-              Text('4:23',
-                  style: TextStyle(fontSize: 9, color: AppColors.textThird)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _ControlBtn(
-                  icon: Icons.skip_previous_rounded, size: 28, onTap: () {}),
-              const SizedBox(width: 16),
-              GestureDetector(
-                onTap: () => setState(() => _isPlaying = !_isPlaying),
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: AppColors.primaryGradient,
-                    boxShadow: [
-                      BoxShadow(
-                          color: AppColors.purple.withOpacity(0.5),
-                          blurRadius: 16,
-                          offset: const Offset(0, 4))
-                    ],
-                  ),
-                  child: Icon(
-                      _isPlaying
-                          ? Icons.pause_rounded
-                          : Icons.play_arrow_rounded,
-                      color: Colors.white,
-                      size: 26),
+                const SizedBox(height: 12),
+
+                // real progress slider
+                StreamBuilder<Duration>(
+                  stream: service.positionStream,
+                  builder: (context, snapshot) {
+                    final pos = snapshot.data ?? Duration.zero;
+                    final dur = service.duration;
+                    final progress = dur.inMilliseconds > 0
+                        ? (pos.inMilliseconds / dur.inMilliseconds)
+                            .clamp(0.0, 1.0)
+                        : 0.0;
+                    return Column(
+                      children: [
+                        SliderTheme(
+                          data: SliderThemeData(
+                            trackHeight: 3,
+                            thumbShape: const RoundSliderThumbShape(
+                                enabledThumbRadius: 6),
+                            overlayShape: const RoundSliderOverlayShape(
+                                overlayRadius: 12),
+                            activeTrackColor: AppColors.purple,
+                            inactiveTrackColor: AppColors.surface2,
+                            thumbColor: Colors.white,
+                            overlayColor: AppColors.purple.withOpacity(0.2),
+                          ),
+                          child: Slider(
+                            value: progress,
+                            onChanged: (v) => service.seekToProgress(v),
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              AudioPlayerService.formatDuration(pos),
+                              style: const TextStyle(
+                                  fontSize: 9, color: AppColors.textThird),
+                            ),
+                            Text(
+                              AudioPlayerService.formatDuration(dur),
+                              style: const TextStyle(
+                                  fontSize: 9, color: AppColors.textThird),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
                 ),
-              ),
-              const SizedBox(width: 16),
-              _ControlBtn(
-                  icon: Icons.skip_next_rounded, size: 28, onTap: () {}),
-            ],
+
+                const SizedBox(height: 12),
+
+                // real controls
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _ControlBtn(
+                      icon: Icons.skip_previous_rounded,
+                      size: 28,
+                      onTap: () => service.playPrevious(),
+                    ),
+                    const SizedBox(width: 16),
+                    GestureDetector(
+                      onTap: () => service.togglePlay(),
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: AppColors.primaryGradient,
+                          boxShadow: [
+                            BoxShadow(
+                                color: AppColors.purple.withOpacity(0.5),
+                                blurRadius: 16,
+                                offset: const Offset(0, 4))
+                          ],
+                        ),
+                        child: service.isLoading
+                            ? const Center(
+                                child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                        color: Colors.white, strokeWidth: 2)))
+                            : Icon(
+                                isPlaying
+                                    ? Icons.pause_rounded
+                                    : Icons.play_arrow_rounded,
+                                color: Colors.white,
+                                size: 26),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    _ControlBtn(
+                      icon: Icons.skip_next_rounded,
+                      size: 28,
+                      onTap: () => service.playNext(),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -510,16 +598,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('🎵 Recently Played',
+            const Text('🎵 Recently Played',
                 style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary)),
-            Text('See all',
-                style: TextStyle(fontSize: 11, color: AppColors.purple3)),
+            GestureDetector(
+              onTap: () => context.push(AppRoutes.playlist),
+              child: const Text('See all',
+                  style: TextStyle(fontSize: 11, color: AppColors.purple3)),
+            ),
           ],
         ),
         const SizedBox(height: 10),
@@ -532,43 +623,46 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             itemBuilder: (context, i) {
               final album = albums[i];
               final colors = album['colors'] as List<Color>;
-              return SizedBox(
-                width: 92,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 92,
-                      height: 92,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: colors),
-                        boxShadow: [
-                          BoxShadow(
-                              color: colors.first.withOpacity(0.4),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4))
-                        ],
+              return GestureDetector(
+                onTap: () => context.push(AppRoutes.nowPlaying),
+                child: SizedBox(
+                  width: 92,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 92,
+                        height: 92,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: colors),
+                          boxShadow: [
+                            BoxShadow(
+                                color: colors.first.withOpacity(0.4),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4))
+                          ],
+                        ),
+                        child: Center(
+                            child: Text(album['emoji'] as String,
+                                style: const TextStyle(fontSize: 36))),
                       ),
-                      child: Center(
-                          child: Text(album['emoji'] as String,
-                              style: const TextStyle(fontSize: 36))),
-                    ),
-                    const SizedBox(height: 7),
-                    Text(album['title'] as String,
-                        style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary),
-                        overflow: TextOverflow.ellipsis),
-                    Text(album['artist'] as String,
-                        style: const TextStyle(
-                            fontSize: 10, color: AppColors.textSecond),
-                        overflow: TextOverflow.ellipsis),
-                  ],
+                      const SizedBox(height: 7),
+                      Text(album['title'] as String,
+                          style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary),
+                          overflow: TextOverflow.ellipsis),
+                      Text(album['artist'] as String,
+                          style: const TextStyle(
+                              fontSize: 10, color: AppColors.textSecond),
+                          overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
                 ),
               );
             },
@@ -623,82 +717,86 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         const SizedBox(height: 10),
         ...rooms.map((room) => Padding(
               padding: const EdgeInsets.only(bottom: 10),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(13),
-                        gradient: LinearGradient(
-                          colors: [room['color'] as Color, AppColors.purple],
+              child: GestureDetector(
+                onTap: () => context.push(AppRoutes.liveRoomIn),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(13),
+                          gradient: LinearGradient(colors: [
+                            room['color'] as Color,
+                            AppColors.purple
+                          ]),
+                        ),
+                        child: Center(
+                            child: Text(room['emoji'] as String,
+                                style: const TextStyle(fontSize: 20))),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(room['name'] as String,
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textPrimary)),
+                            Text(room['track'] as String,
+                                style: const TextStyle(
+                                    fontSize: 10, color: AppColors.textSecond)),
+                          ],
                         ),
                       ),
-                      child: Center(
-                          child: Text(room['emoji'] as String,
-                              style: const TextStyle(fontSize: 20))),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text(room['name'] as String,
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.errorBg,
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                  color: AppColors.error.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                    width: 4,
+                                    height: 4,
+                                    decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: AppColors.error)),
+                                const SizedBox(width: 3),
+                                const Text('LIVE',
+                                    style: TextStyle(
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.error,
+                                        letterSpacing: 1)),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text('${room['listeners']} 🎧',
                               style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary)),
-                          Text(room['track'] as String,
-                              style: const TextStyle(
-                                  fontSize: 10, color: AppColors.textSecond)),
+                                  fontSize: 10, color: AppColors.textThird)),
                         ],
                       ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 7, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.errorBg,
-                            borderRadius: BorderRadius.circular(999),
-                            border: Border.all(
-                                color: AppColors.error.withOpacity(0.3)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                  width: 4,
-                                  height: 4,
-                                  decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: AppColors.error)),
-                              const SizedBox(width: 3),
-                              const Text('LIVE',
-                                  style: TextStyle(
-                                      fontSize: 8,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.error,
-                                      letterSpacing: 1)),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text('${room['listeners']} 🎧',
-                            style: const TextStyle(
-                                fontSize: 10, color: AppColors.textThird)),
-                      ],
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             )),
@@ -707,9 +805,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 }
 
+// ── Wave Indicator ────────────────────────────────────────────
 class _WaveIndicator extends StatefulWidget {
   final bool isPlaying;
   const _WaveIndicator({required this.isPlaying});
+
   @override
   State<_WaveIndicator> createState() => _WaveIndicatorState();
 }
@@ -718,6 +818,7 @@ class _WaveIndicatorState extends State<_WaveIndicator>
     with TickerProviderStateMixin {
   late List<AnimationController> _controllers;
   late List<Animation<double>> _animations;
+
   @override
   void initState() {
     super.initState();
@@ -765,9 +866,11 @@ class _WaveIndicatorState extends State<_WaveIndicator>
   }
 }
 
+// ── Progress Bar ──────────────────────────────────────────────
 class _ProgressBar extends StatelessWidget {
   final double progress;
   const _ProgressBar({required this.progress});
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
@@ -785,7 +888,8 @@ class _ProgressBar extends StatelessWidget {
                 gradient: AppColors.primaryGradient,
                 borderRadius: BorderRadius.circular(999))),
         Positioned(
-          left: constraints.maxWidth * progress - 5,
+          left: (constraints.maxWidth * progress - 5)
+              .clamp(0, constraints.maxWidth - 10),
           top: -3,
           child: Container(
               width: 9,
@@ -803,12 +907,18 @@ class _ProgressBar extends StatelessWidget {
   }
 }
 
+// ── Control Button ────────────────────────────────────────────
 class _ControlBtn extends StatelessWidget {
   final IconData icon;
   final double size;
   final VoidCallback onTap;
-  const _ControlBtn(
-      {required this.icon, required this.size, required this.onTap});
+
+  const _ControlBtn({
+    required this.icon,
+    required this.size,
+    required this.onTap,
+  });
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -816,14 +926,15 @@ class _ControlBtn extends StatelessWidget {
       child: Container(
         width: 40,
         height: 40,
-        decoration: const BoxDecoration(
-            shape: BoxShape.circle, color: AppColors.surface),
+        decoration:
+            BoxDecoration(shape: BoxShape.circle, color: AppColors.surface),
         child: Icon(icon, color: AppColors.textSecond, size: size),
       ),
     );
   }
 }
 
+// ── Grid Painter ──────────────────────────────────────────────
 class _GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {

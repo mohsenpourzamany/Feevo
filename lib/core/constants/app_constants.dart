@@ -1,22 +1,35 @@
 class AppConstants {
   AppConstants._();
 
-  // App Info
+  // ─── App Info ─────────────────────────────────────────────────────────────────
   static const String appName = 'Feevo';
   static const String appVersion = '1.0.0';
   static const String packageName = 'music.feevo.app';
   static const String website = 'https://feevo.music';
 
-  // Supabase
-  static const String supabaseUrl = 'YOUR_SUPABASE_URL';
-  static const String supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+  // ─── Supabase ─────────────────────────────────────────────────────────────────
+  static const String supabaseUrl = 'https://mizjjblcitgpkogfobbn.supabase.co';
+  static const String supabaseKey =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pempqYmxjaXRncGtvZ2ZvYmJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNDM0MTgsImV4cCI6MjA5NTYxOTQxOH0.Bpni6PsYYBf-VggL92DjDVEl9UjERMs1asylVgyfCf0';
 
-  // API
+  // ─── API ──────────────────────────────────────────────────────────────────────
   static const String baseUrl = 'https://api.feevo.music';
   static const int connectTimeout = 15000;
   static const int receiveTimeout = 15000;
 
-  // Storage keys
+  // ─── Spotify ──────────────────────────────────────────────────────────────────
+  static const String spotifyClientId = 'YOUR_SPOTIFY_CLIENT_ID';
+  static const String spotifyClientSecret = 'YOUR_SPOTIFY_CLIENT_SECRET';
+  static const String spotifyBaseUrl = 'https://api.spotify.com/v1';
+  static const String spotifyTokenUrl =
+      'https://accounts.spotify.com/api/token';
+
+  // ─── Deep Links ───────────────────────────────────────────────────────────────
+  static const String appScheme = 'music.feevo.app';
+  static const String loginCallbackPath = '://login-callback';
+  static const String resetPasswordPath = '://reset-password';
+
+  // ─── Storage Keys ─────────────────────────────────────────────────────────────
   static const String keyOnboarded = 'feevo_onboarded';
   static const String keyToken = 'feevo_token';
   static const String keyUserId = 'feevo_user_id';
@@ -24,7 +37,7 @@ class AppConstants {
   static const String keyLanguage = 'feevo_language';
   static const String keyGenreDone = 'feevo_genre_done';
 
-  // Cat mascot paths
+  // ─── Cat Mascot Paths ─────────────────────────────────────────────────────────
   static const String cat1 = 'assets/images/cats/cat_1.png'; // Super Hype
   static const String cat2 = 'assets/images/cats/cat_2.png'; // Hype
   static const String cat3 = 'assets/images/cats/cat_3.png'; // Chill
@@ -33,7 +46,7 @@ class AppConstants {
   static const String cat6 = 'assets/images/cats/cat_6.png'; // Thinking
   static const String cat7 = 'assets/images/cats/cat_7.png'; // Focused
 
-  // Mood types
+  // ─── Mood Types ───────────────────────────────────────────────────────────────
   static const List<Map<String, String>> moods = [
     {'id': 'energetic', 'label': 'Energetic', 'emoji': '⚡'},
     {'id': 'chill', 'label': 'Chill', 'emoji': '🌙'},
@@ -43,7 +56,7 @@ class AppConstants {
     {'id': 'happy', 'label': 'Happy', 'emoji': '💗'},
   ];
 
-  // Supported Languages
+  // ─── Supported Languages ──────────────────────────────────────────────────────
   static const List<Map<String, String>> languages = [
     {
       'code': 'en',

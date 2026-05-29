@@ -13,27 +13,86 @@ class PlaylistDetailScreen extends StatefulWidget {
 
 class _PlaylistDetailScreenState extends State<PlaylistDetailScreen>
     with TickerProviderStateMixin {
-
-  bool _isPlaying  = false;
-  bool _isLiked    = false;
+  bool _isPlaying = false;
+  bool _isLiked = false;
 
   late AnimationController _contentController;
   late AnimationController _headerController;
-  late Animation<double>   _contentOpacity;
-  late Animation<Offset>   _contentSlide;
-  late Animation<double>   _headerScale;
+  late Animation<double> _contentOpacity;
+  late Animation<Offset> _contentSlide;
+  late Animation<double> _headerScale;
 
   final List<Map<String, dynamic>> _tracks = [
-    {'title': 'Midnight City',            'artist': 'M83',          'emoji': '🎵', 'duration': '4:03', 'liked': true},
-    {'title': 'Let It Happen',            'artist': 'Tame Impala',  'emoji': '🌊', 'duration': '7:47', 'liked': false},
-    {'title': 'Blinding Lights',          'artist': 'The Weeknd',   'emoji': '🌙', 'duration': '3:22', 'liked': true},
-    {'title': 'Good Days',                'artist': 'SZA',          'emoji': '💗', 'duration': '4:39', 'liked': false},
-    {'title': 'Holocene',                 'artist': 'Bon Iver',     'emoji': '❄️', 'duration': '5:37', 'liked': true},
-    {'title': 'The Less I Know Better',   'artist': 'Tame Impala',  'emoji': '🎸', 'duration': '3:36', 'liked': false},
-    {'title': 'Motion Picture Soundtrack','artist': 'Radiohead',    'emoji': '🎹', 'duration': '6:59', 'liked': false},
-    {'title': 'Feels Like We Only Go',    'artist': 'Tame Impala',  'emoji': '⚡', 'duration': '4:01', 'liked': true},
-    {'title': 'Digital Love',             'artist': 'Daft Punk',    'emoji': '🤖', 'duration': '4:58', 'liked': false},
-    {'title': 'Nightcall',                'artist': 'Kavinsky',     'emoji': '🌃', 'duration': '4:15', 'liked': true},
+    {
+      'title': 'Midnight City',
+      'artist': 'M83',
+      'emoji': '🎵',
+      'duration': '4:03',
+      'liked': true
+    },
+    {
+      'title': 'Let It Happen',
+      'artist': 'Tame Impala',
+      'emoji': '🌊',
+      'duration': '7:47',
+      'liked': false
+    },
+    {
+      'title': 'Blinding Lights',
+      'artist': 'The Weeknd',
+      'emoji': '🌙',
+      'duration': '3:22',
+      'liked': true
+    },
+    {
+      'title': 'Good Days',
+      'artist': 'SZA',
+      'emoji': '💗',
+      'duration': '4:39',
+      'liked': false
+    },
+    {
+      'title': 'Holocene',
+      'artist': 'Bon Iver',
+      'emoji': '❄️',
+      'duration': '5:37',
+      'liked': true
+    },
+    {
+      'title': 'The Less I Know Better',
+      'artist': 'Tame Impala',
+      'emoji': '🎸',
+      'duration': '3:36',
+      'liked': false
+    },
+    {
+      'title': 'Motion Picture Soundtrack',
+      'artist': 'Radiohead',
+      'emoji': '🎹',
+      'duration': '6:59',
+      'liked': false
+    },
+    {
+      'title': 'Feels Like We Only Go',
+      'artist': 'Tame Impala',
+      'emoji': '⚡',
+      'duration': '4:01',
+      'liked': true
+    },
+    {
+      'title': 'Digital Love',
+      'artist': 'Daft Punk',
+      'emoji': '🤖',
+      'duration': '4:58',
+      'liked': false
+    },
+    {
+      'title': 'Nightcall',
+      'artist': 'Kavinsky',
+      'emoji': '🌃',
+      'duration': '4:15',
+      'liked': true
+    },
   ];
 
   @override
@@ -61,7 +120,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen>
     );
     _contentSlide = Tween<Offset>(
       begin: const Offset(0, 0.05),
-      end:   Offset.zero,
+      end: Offset.zero,
     ).animate(
       CurvedAnimation(parent: _contentController, curve: Curves.easeOutCubic),
     );
@@ -92,6 +151,18 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen>
     return h > 0 ? '${h}h ${m}m' : '${m}m';
   }
 
+  void _showSnackBar(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: AppColors.purple,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(milliseconds: 1200),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,19 +170,14 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen>
       body: Stack(
         children: [
           Positioned.fill(child: CustomPaint(painter: _GridPainter())),
-
           CustomScrollView(
             slivers: [
-
-              // ── Header
               SliverToBoxAdapter(
                 child: ScaleTransition(
                   scale: _headerScale,
-                  child: _buildHeader(),
+                  child: _buildHeader(context),
                 ),
               ),
-
-              // ── Track List
               SliverToBoxAdapter(
                 child: SlideTransition(
                   position: _contentSlide,
@@ -128,21 +194,23 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen>
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
-          end:   Alignment.bottomCenter,
+          end: Alignment.bottomCenter,
           colors: [Color(0xFF1a0535), Color(0xFF06060F)],
         ),
       ),
       child: Stack(
         children: [
           Positioned(
-            top: -80, right: -60,
+            top: -80,
+            right: -60,
             child: Container(
-              width: 300, height: 300,
+              width: 300,
+              height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(colors: [
@@ -152,24 +220,24 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen>
               ),
             ),
           ),
-
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
               child: Column(
                 children: [
-
                   // top bar
                   Row(
                     children: [
                       GestureDetector(
                         onTap: () => context.pop(),
                         child: Container(
-                          width: 36, height: 36,
+                          width: 36,
+                          height: 36,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: Colors.black.withOpacity(0.3),
-                            border: Border.all(color: Colors.white.withOpacity(0.15)),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.15)),
                           ),
                           child: const Icon(Icons.arrow_back_ios_new_rounded,
                               color: Colors.white, size: 16),
@@ -177,13 +245,15 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen>
                       ),
                       const Spacer(),
                       GestureDetector(
-                        onTap: () {},
+                        onTap: () => _showSnackBar('More options coming soon!'),
                         child: Container(
-                          width: 36, height: 36,
+                          width: 36,
+                          height: 36,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: Colors.black.withOpacity(0.3),
-                            border: Border.all(color: Colors.white.withOpacity(0.15)),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.15)),
                           ),
                           child: const Icon(Icons.more_horiz_rounded,
                               color: Colors.white, size: 18),
@@ -194,18 +264,18 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen>
 
                   const SizedBox(height: 20),
 
-                  // playlist art + cat
+                  // playlist art
                   Stack(
                     alignment: Alignment.center,
                     children: [
                       Container(
-                        width:  160,
+                        width: 160,
                         height: 160,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(22),
                           gradient: const LinearGradient(
                             begin: Alignment.topLeft,
-                            end:   Alignment.bottomRight,
+                            end: Alignment.bottomRight,
                             colors: [
                               Color(0xFF4C1D95),
                               Color(0xFF7C3AED),
@@ -214,34 +284,35 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen>
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color:      AppColors.purple.withOpacity(0.5),
+                              color: AppColors.purple.withOpacity(0.5),
                               blurRadius: 30,
-                              offset:     const Offset(0, 10),
+                              offset: const Offset(0, 10),
                             ),
                           ],
                         ),
                         child: Stack(
                           children: [
-                            // grid of mini emojis
-                            ...List.generate(4, (i) => Positioned(
-                              top:  (i ~/ 2) * 80.0 + 20,
-                              left: (i % 2)  * 80.0 + 20,
-                              child: Text(
-                                _tracks[i]['emoji'] as String,
-                                style: const TextStyle(fontSize: 28),
-                              ),
-                            )),
+                            ...List.generate(
+                                4,
+                                (i) => Positioned(
+                                      top: (i ~/ 2) * 80.0 + 20,
+                                      left: (i % 2) * 80.0 + 20,
+                                      child: Text(
+                                        _tracks[i]['emoji'] as String,
+                                        style: const TextStyle(fontSize: 28),
+                                      ),
+                                    )),
                           ],
                         ),
                       ),
-                      // cat_3 floating
                       Positioned(
-                        bottom: -10, right: -10,
+                        bottom: -10,
+                        right: -10,
                         child: Image.asset(
                           AppConstants.cat3,
-                          width:  55,
+                          width: 55,
                           height: 55,
-                          fit:    BoxFit.contain,
+                          fit: BoxFit.contain,
                         ),
                       ),
                     ],
@@ -249,13 +320,12 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen>
 
                   const SizedBox(height: 16),
 
-                  // playlist info
                   const Text(
                     'Late Night Chill 🌙',
                     style: TextStyle(
-                      fontSize:      22,
-                      fontWeight:    FontWeight.w800,
-                      color:         Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
                       letterSpacing: -0.5,
                     ),
                     textAlign: TextAlign.center,
@@ -271,7 +341,6 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen>
                   // action buttons
                   Row(
                     children: [
-                      // play all
                       Expanded(
                         child: GestureDetector(
                           onTap: () {
@@ -281,13 +350,13 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen>
                           child: Container(
                             height: 46,
                             decoration: BoxDecoration(
-                              gradient:     AppColors.primaryGradient,
+                              gradient: AppColors.primaryGradient,
                               borderRadius: BorderRadius.circular(999),
                               boxShadow: [
                                 BoxShadow(
-                                  color:      AppColors.purple.withOpacity(0.4),
+                                  color: AppColors.purple.withOpacity(0.4),
                                   blurRadius: 14,
-                                  offset:     const Offset(0, 4),
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
                             ),
@@ -299,15 +368,15 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen>
                                       ? Icons.pause_rounded
                                       : Icons.play_arrow_rounded,
                                   color: Colors.white,
-                                  size:  22,
+                                  size: 22,
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
                                   _isPlaying ? 'Pause' : 'Play All',
                                   style: const TextStyle(
-                                    fontSize:   14,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w700,
-                                    color:      Colors.white,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ],
@@ -316,11 +385,11 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen>
                         ),
                       ),
                       const SizedBox(width: 10),
-                      // like
                       GestureDetector(
                         onTap: () => setState(() => _isLiked = !_isLiked),
                         child: Container(
-                          width: 46, height: 46,
+                          width: 46,
+                          height: 46,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: _isLiked
@@ -336,36 +405,43 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen>
                             _isLiked
                                 ? Icons.favorite_rounded
                                 : Icons.favorite_border_rounded,
-                            color: _isLiked
-                                ? AppColors.purple3
-                                : Colors.white60,
+                            color:
+                                _isLiked ? AppColors.purple3 : Colors.white60,
                             size: 20,
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // shuffle
-                      Container(
-                        width: 46, height: 46,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.black.withOpacity(0.3),
-                          border: Border.all(color: Colors.white.withOpacity(0.15)),
+                      GestureDetector(
+                        onTap: () => _showSnackBar('Shuffle on!'),
+                        child: Container(
+                          width: 46,
+                          height: 46,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black.withOpacity(0.3),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.15)),
+                          ),
+                          child: const Icon(Icons.shuffle_rounded,
+                              color: Colors.white60, size: 20),
                         ),
-                        child: const Icon(Icons.shuffle_rounded,
-                            color: Colors.white60, size: 20),
                       ),
                       const SizedBox(width: 8),
-                      // download
-                      Container(
-                        width: 46, height: 46,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.black.withOpacity(0.3),
-                          border: Border.all(color: Colors.white.withOpacity(0.15)),
+                      GestureDetector(
+                        onTap: () => _showSnackBar('Downloading...'),
+                        child: Container(
+                          width: 46,
+                          height: 46,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black.withOpacity(0.3),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.15)),
+                          ),
+                          child: const Icon(Icons.download_outlined,
+                              color: Colors.white60, size: 20),
                         ),
-                        child: const Icon(Icons.download_outlined,
-                            color: Colors.white60, size: 20),
                       ),
                     ],
                   ),
@@ -387,9 +463,9 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen>
           const Text(
             'TRACKS',
             style: TextStyle(
-              fontSize:      10,
-              fontWeight:    FontWeight.w600,
-              color:         AppColors.textThird,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textThird,
               letterSpacing: 2,
             ),
           ),
@@ -400,30 +476,30 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen>
               onTap: () => context.push(AppRoutes.nowPlaying),
               child: Container(
                 margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
-                  color:        AppColors.surface,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(14),
-                  border:       Border.all(color: AppColors.border),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Row(
                   children: [
-                    // number
                     SizedBox(
                       width: 20,
                       child: Text(
                         '${i + 1}',
                         style: const TextStyle(
                           fontSize: 11,
-                          color:    AppColors.textThird,
+                          color: AppColors.textThird,
                         ),
                         textAlign: TextAlign.center,
                       ),
                     ),
                     const SizedBox(width: 10),
-                    // art
                     Container(
-                      width: 44, height: 44,
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
                         gradient: LinearGradient(colors: [
@@ -437,7 +513,6 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen>
                       ),
                     ),
                     const SizedBox(width: 10),
-                    // info
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -445,9 +520,9 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen>
                           Text(
                             t['title'] as String,
                             style: const TextStyle(
-                              fontSize:   13,
+                              fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color:      AppColors.textPrimary,
+                              color: AppColors.textPrimary,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -455,22 +530,20 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen>
                             t['artist'] as String,
                             style: const TextStyle(
                               fontSize: 11,
-                              color:    AppColors.textSecond,
+                              color: AppColors.textSecond,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    // duration
                     Text(
                       t['duration'] as String,
                       style: const TextStyle(
                         fontSize: 10,
-                        color:    AppColors.textThird,
+                        color: AppColors.textThird,
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // like
                     GestureDetector(
                       onTap: () => setState(() {
                         _tracks[i]['liked'] = !(_tracks[i]['liked'] as bool);
@@ -500,7 +573,7 @@ class _GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color       = AppColors.purple.withOpacity(0.04)
+      ..color = AppColors.purple.withOpacity(0.04)
       ..strokeWidth = 1;
     const step = 44.0;
     for (double x = 0; x < size.width; x += step) {
@@ -510,6 +583,7 @@ class _GridPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
     }
   }
+
   @override
   bool shouldRepaint(_GridPainter old) => false;
 }

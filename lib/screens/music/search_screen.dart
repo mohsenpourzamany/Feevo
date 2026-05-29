@@ -449,80 +449,83 @@ class _SearchScreenState extends State<SearchScreen>
           final track = _trending[i];
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Row(
-                children: [
-                  // rank
-                  SizedBox(
-                    width: 20,
-                    child: Text(
-                      '${i + 1}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textThird,
-                        fontWeight: FontWeight.w600,
+            child: GestureDetector(
+              onTap: () => context.push(AppRoutes.artist),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: [
+                    // rank
+                    SizedBox(
+                      width: 20,
+                      child: Text(
+                        '${i + 1}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textThird,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  // album art
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.purple.withOpacity(0.6),
-                          AppColors.cyan.withOpacity(0.4),
+                    const SizedBox(width: 8),
+                    // album art
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.purple.withOpacity(0.6),
+                            AppColors.cyan.withOpacity(0.4),
+                          ],
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          track['emoji']!,
+                          style: const TextStyle(fontSize: 20),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            track['title']!,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            track['artist']!,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: AppColors.textSecond,
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                    child: Center(
-                      child: Text(
-                        track['emoji']!,
-                        style: const TextStyle(fontSize: 20),
+                    Text(
+                      track['duration']!,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: AppColors.textThird,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          track['title']!,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          track['artist']!,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: AppColors.textSecond,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Text(
-                    track['duration']!,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: AppColors.textThird,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           );

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/router/app_router.dart';
 import '../../core/widgets/feevo_button.dart';
 import '../../core/widgets/feevo_input.dart';
+import '../../core/providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,7 +21,6 @@ class _LoginScreenState extends State<LoginScreen>
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
-  bool _isLoading = false;
 
   late AnimationController _catController;
   late AnimationController _floatController;
@@ -92,31 +93,34 @@ class _LoginScreenState extends State<LoginScreen>
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _isLoading = true);
 
-    // TODO: connect to Supabase auth
-    await Future.delayed(const Duration(milliseconds: 1500));
+    final auth = context.read<AuthProvider>();
+    final ok = await auth.signIn(
+      email: _emailCtrl.text,
+      password: _passCtrl.text,
+    );
+
     if (!mounted) return;
 
-    final prefs = await SharedPreferences.getInstance();
-
-    // پاک کردن cache قدیمی
-    await prefs.remove(AppConstants.keyOnboarded);
-    await prefs.remove(AppConstants.keyGenreDone);
-
-    final onboarded = prefs.getBool(AppConstants.keyOnboarded) ?? false;
-    final genreDone = prefs.getBool(AppConstants.keyGenreDone) ?? false;
-
-    setState(() => _isLoading = false);
-    if (!mounted) return;
-
-    if (!onboarded) {
-      context.go(AppRoutes.onboarding);
-    } else if (!genreDone) {
-      context.go(AppRoutes.genrePick);
-    } else {
-      context.go(AppRoutes.home);
+    if (!ok) {
+      // error message از AuthProvider نشون میده
+      return;
     }
+
+    if (!mounted) return;
+    // لاگین موفق — GoRouter redirect خودش handle می‌کنه
+    context.go(AppRoutes.home);
+  }
+
+  Future<void> _loginWithGoogle() async {
+    final auth = context.read<AuthProvider>();
+    await auth.signInWithGoogle();
+    // GoRouter redirect handles navigation via authStateChanges
+  }
+
+  Future<void> _loginWithApple() async {
+    final auth = context.read<AuthProvider>();
+    await auth.signInWithApple();
   }
 
   @override
@@ -165,7 +169,7 @@ class _LoginScreenState extends State<LoginScreen>
                   children: [
                     const SizedBox(height: 24),
 
-                    // cat_7 + logo
+                    // Cat + logo
                     AnimatedBuilder(
                       animation:
                           Listenable.merge([_catController, _floatController]),
@@ -232,108 +236,139 @@ class _LoginScreenState extends State<LoginScreen>
                       position: _contentSlide,
                       child: FadeTransition(
                         opacity: _contentOpacity,
-                        child: Column(
-                          children: [
-                            _SocialButton(
-                              label: 'Continue with Google',
-                              isGoogle: true,
-                              onTap: () {},
-                            ),
-                            const SizedBox(height: 12),
-                            _SocialButton(
-                              label: 'Continue with Apple',
-                              isGoogle: false,
-                              onTap: () {},
-                            ),
-                            const SizedBox(height: 20),
-                            Row(children: [
-                              Expanded(
-                                  child: Container(
-                                      height: 1, color: AppColors.border)),
-                              const Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 16),
-                                child: Text('or',
-                                    style: TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.textThird)),
-                              ),
-                              Expanded(
-                                  child: Container(
-                                      height: 1, color: AppColors.border)),
-                            ]),
-                            const SizedBox(height: 20),
-                            FeevoInput(
-                              label: 'Email',
-                              placeholder: 'your@email.com',
-                              controller: _emailCtrl,
-                              keyboardType: TextInputType.emailAddress,
-                              validator: (v) {
-                                if (v == null || v.isEmpty)
-                                  return 'Email is required';
-                                if (!v.contains('@'))
-                                  return 'Enter a valid email';
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            FeevoInput(
-                              label: 'Password',
-                              placeholder: '••••••••',
-                              controller: _passCtrl,
-                              isPassword: true,
-                              validator: (v) {
-                                if (v == null || v.isEmpty)
-                                  return 'Password is required';
-                                if (v.length < 6) return 'Min. 6 characters';
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 10),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: GestureDetector(
-                                onTap: () => context.push(AppRoutes.forgotPass),
-                                child: const Text(
-                                  'Forgot password?',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.purple3,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            FeevoButton(
-                              label: 'Sign In',
-                              onTap: _login,
-                              isLoading: _isLoading,
-                            ),
-                            const SizedBox(height: 20),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                        child: Consumer<AuthProvider>(
+                          builder: (context, auth, _) {
+                            return Column(
                               children: [
-                                const Text(
-                                  "Don't have an account? ",
-                                  style: TextStyle(
-                                      fontSize: 13,
-                                      color: AppColors.textSecond),
+                                _SocialButton(
+                                  label: 'Continue with Google',
+                                  isGoogle: true,
+                                  onTap: _loginWithGoogle,
                                 ),
-                                GestureDetector(
-                                  onTap: () => context.go(AppRoutes.register),
-                                  child: const Text(
-                                    'Sign Up',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: AppColors.purple3,
-                                      fontWeight: FontWeight.w700,
+                                const SizedBox(height: 12),
+                                _SocialButton(
+                                  label: 'Continue with Apple',
+                                  isGoogle: false,
+                                  onTap: _loginWithApple,
+                                ),
+                                const SizedBox(height: 20),
+                                Row(children: [
+                                  Expanded(
+                                      child: Container(
+                                          height: 1, color: AppColors.border)),
+                                  const Padding(
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: 16),
+                                    child: Text('or',
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            color: AppColors.textThird)),
+                                  ),
+                                  Expanded(
+                                      child: Container(
+                                          height: 1, color: AppColors.border)),
+                                ]),
+                                const SizedBox(height: 20),
+                                FeevoInput(
+                                  label: 'Email',
+                                  placeholder: 'your@email.com',
+                                  controller: _emailCtrl,
+                                  keyboardType: TextInputType.emailAddress,
+                                  validator: (v) {
+                                    if (v == null || v.isEmpty)
+                                      return 'Email is required';
+                                    if (!v.contains('@'))
+                                      return 'Enter a valid email';
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 16),
+                                FeevoInput(
+                                  label: 'Password',
+                                  placeholder: '••••••••',
+                                  controller: _passCtrl,
+                                  isPassword: true,
+                                  validator: (v) {
+                                    if (v == null || v.isEmpty)
+                                      return 'Password is required';
+                                    if (v.length < 6)
+                                      return 'Min. 6 characters';
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 10),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: GestureDetector(
+                                    onTap: () =>
+                                        context.push(AppRoutes.forgotPass),
+                                    child: const Text(
+                                      'Forgot password?',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.purple3,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
                                 ),
+
+                                // Error message
+                                if (auth.errorMessage != null) ...[
+                                  const SizedBox(height: 12),
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 14, vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                          color: Colors.red.withOpacity(0.3)),
+                                    ),
+                                    child: Text(
+                                      auth.errorMessage!,
+                                      style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.redAccent),
+                                    ),
+                                  ),
+                                ],
+
+                                const SizedBox(height: 24),
+                                FeevoButton(
+                                  label: 'Sign In',
+                                  onTap: auth.isLoading ? null : _login,
+                                  isLoading: auth.isLoading,
+                                ),
+                                const SizedBox(height: 20),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Text(
+                                      "Don't have an account? ",
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          color: AppColors.textSecond),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () =>
+                                          context.go(AppRoutes.register),
+                                      child: const Text(
+                                        'Sign Up',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: AppColors.purple3,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 40),
                               ],
-                            ),
-                            const SizedBox(height: 40),
-                          ],
+                            );
+                          },
                         ),
                       ),
                     ),
