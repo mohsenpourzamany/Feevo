@@ -4,6 +4,8 @@ import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/providers/auth_provider.dart';
 import 'core/providers/user_provider.dart';
+import 'core/providers/deezer_provider.dart';
+import 'core/providers/mood_provider.dart';
 import 'core/services/audio_player_service.dart';
 
 class FeevoApp extends StatelessWidget {
@@ -15,6 +17,8 @@ class FeevoApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => DeezerProvider()),
+        ChangeNotifierProvider(create: (_) => MoodProvider()),
         ChangeNotifierProvider(create: (_) => AudioPlayerService()),
       ],
       child: Consumer<AuthProvider>(

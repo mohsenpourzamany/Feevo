@@ -43,6 +43,11 @@ dependencies:
   # Share
   share_plus: ^7.2.2
 
+  youtube_explode_dart: ^2.3.0
+
+  #http
+  http: ^1.6.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -32,7 +32,6 @@ class FeevoTrack {
         extras: {'emoji': emoji},
       );
 
-  // mock tracks for demo
   static List<FeevoTrack> get mockTracks => [
         const FeevoTrack(
           id: '1',
@@ -86,7 +85,6 @@ class AudioPlayerService extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
 
-  // ── Getters
   AudioPlayer get player => _player;
   List<FeevoTrack> get queue => _queue;
   int get currentIdx => _currentIdx;
@@ -139,14 +137,22 @@ class AudioPlayerService extends ChangeNotifier {
     }
   }
 
-  // ── Play a single track
+  // ── Load queue بدون پلی کردن ─────────────────────────────────
+  void loadQueue(List<FeevoTrack> tracks) {
+    if (tracks.isEmpty) return;
+    _queue = tracks;
+    _currentIdx = 0;
+    notifyListeners(); // فقط UI آپدیت میشه، پلی نمیشه
+  }
+
+  // ── Play a single track ───────────────────────────────────────
   Future<void> playTrack(FeevoTrack track) async {
     _queue = [track];
     _currentIdx = 0;
     await _loadAndPlay(track);
   }
 
-  // ── Play a queue
+  // ── Play a queue ──────────────────────────────────────────────
   Future<void> playQueue(List<FeevoTrack> tracks, {int startIndex = 0}) async {
     if (tracks.isEmpty) return;
     _queue = tracks;
@@ -154,12 +160,19 @@ class AudioPlayerService extends ChangeNotifier {
     await _loadAndPlay(_queue[_currentIdx]);
   }
 
-  // ── Load and play
+  // ── Load and play ─────────────────────────────────────────────
   Future<void> _loadAndPlay(FeevoTrack track) async {
     try {
       _isLoading = true;
       _error = null;
       notifyListeners();
+
+      if (track.url.isEmpty) {
+        _error = 'No preview available';
+        _isLoading = false;
+        notifyListeners();
+        return;
+      }
 
       await _player.setAudioSource(
         AudioSource.uri(
@@ -178,7 +191,7 @@ class AudioPlayerService extends ChangeNotifier {
     }
   }
 
-  // ── Controls
+  // ── Controls ──────────────────────────────────────────────────
   Future<void> play() async => await _player.play();
   Future<void> pause() async => await _player.pause();
 
@@ -186,7 +199,12 @@ class AudioPlayerService extends ChangeNotifier {
     if (_player.playing) {
       await pause();
     } else {
-      await play();
+      // اگه هنوز source لود نشده، اول لود کن
+      if (currentTrack != null && duration == Duration.zero) {
+        await _loadAndPlay(currentTrack!);
+      } else {
+        await play();
+      }
     }
     notifyListeners();
   }
@@ -199,9 +217,7 @@ class AudioPlayerService extends ChangeNotifier {
   Future<void> seekToProgress(double progress) async {
     final dur = duration;
     if (dur == Duration.zero) return;
-    await seek(Duration(
-      milliseconds: (progress * dur.inMilliseconds).round(),
-    ));
+    await seek(Duration(milliseconds: (progress * dur.inMilliseconds).round()));
   }
 
   Future<void> playNext() async {
@@ -211,7 +227,6 @@ class AudioPlayerService extends ChangeNotifier {
   }
 
   Future<void> playPrevious() async {
-    // اگه بیشتر از ۳ ثانیه پخش شده، از اول همین آهنگ بپخش
     if (position.inSeconds > 3) {
       await seek(Duration.zero);
       return;
@@ -227,7 +242,6 @@ class AudioPlayerService extends ChangeNotifier {
     await _loadAndPlay(_queue[_currentIdx]);
   }
 
-  // ── Shuffle
   Future<void> shuffle() async {
     if (_queue.isEmpty) return;
     final current = _queue[_currentIdx];
@@ -236,7 +250,6 @@ class AudioPlayerService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── Volume
   Future<void> setVolume(double volume) async {
     await _player.setVolume(volume.clamp(0.0, 1.0));
     notifyListeners();
@@ -244,7 +257,6 @@ class AudioPlayerService extends ChangeNotifier {
 
   double get volume => _player.volume;
 
-  // ── Repeat
   Future<void> setLoopMode(LoopMode mode) async {
     await _player.setLoopMode(mode);
     notifyListeners();
@@ -252,7 +264,6 @@ class AudioPlayerService extends ChangeNotifier {
 
   LoopMode get loopMode => _player.loopMode;
 
-  // ── Add to queue
   void addToQueue(FeevoTrack track) {
     _queue.add(track);
     notifyListeners();
@@ -265,7 +276,6 @@ class AudioPlayerService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── Format helpers
   static String formatDuration(Duration d) {
     final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');

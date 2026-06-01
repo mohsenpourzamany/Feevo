@@ -156,9 +156,13 @@ GoRouter createAppRouter(AuthProvider authProvider) {
           name: 'queue',
           builder: (c, s) => const QueueScreen()),
       GoRoute(
-          path: AppRoutes.artist,
-          name: 'artist',
-          builder: (c, s) => const ArtistProfileScreen()),
+        path: AppRoutes.artist,
+        name: 'artist',
+        builder: (c, s) {
+          final id = s.uri.queryParameters['id'] ?? '';
+          return ArtistProfileScreen(artistId: id);
+        },
+      ),
       GoRoute(
           path: AppRoutes.playlist,
           name: 'playlist',

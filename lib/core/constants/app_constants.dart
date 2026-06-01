@@ -18,8 +18,8 @@ class AppConstants {
   static const int receiveTimeout = 15000;
 
   // ─── Spotify ──────────────────────────────────────────────────────────────────
-  static const String spotifyClientId = 'YOUR_SPOTIFY_CLIENT_ID';
-  static const String spotifyClientSecret = 'YOUR_SPOTIFY_CLIENT_SECRET';
+  static const String spotifyClientId = 'd2d3ac81e35d4635a24066d4e8a16b5b';
+  static const String spotifyClientSecret = '120327e744b241b8a621bff26be3c3af';
   static const String spotifyBaseUrl = 'https://api.spotify.com/v1';
   static const String spotifyTokenUrl =
       'https://accounts.spotify.com/api/token';
@@ -64,7 +64,7 @@ class AppConstants {
       'native': 'English',
       'flag': '🇺🇸',
       'rtl': 'false',
-      'region': 'Global',
+      'region': 'Global'
     },
     {
       'code': 'fa',
@@ -73,7 +73,7 @@ class AppConstants {
       'flag': 'assets/images/flags/iran_flag.png',
       'isImage': 'true',
       'rtl': 'true',
-      'region': 'Middle East',
+      'region': 'Middle East'
     },
     {
       'code': 'ar',
@@ -81,7 +81,7 @@ class AppConstants {
       'native': 'العربية',
       'flag': '🇸🇦',
       'rtl': 'true',
-      'region': 'Middle East',
+      'region': 'Middle East'
     },
     {
       'code': 'tr',
@@ -89,7 +89,7 @@ class AppConstants {
       'native': 'Türkçe',
       'flag': '🇹🇷',
       'rtl': 'false',
-      'region': 'Europe / Asia',
+      'region': 'Europe / Asia'
     },
     {
       'code': 'es',
@@ -97,7 +97,7 @@ class AppConstants {
       'native': 'Español',
       'flag': '🇪🇸',
       'rtl': 'false',
-      'region': 'Global',
+      'region': 'Global'
     },
     {
       'code': 'fr',
@@ -105,7 +105,7 @@ class AppConstants {
       'native': 'Français',
       'flag': '🇫🇷',
       'rtl': 'false',
-      'region': 'Global',
+      'region': 'Global'
     },
     {
       'code': 'de',
@@ -113,7 +113,7 @@ class AppConstants {
       'native': 'Deutsch',
       'flag': '🇩🇪',
       'rtl': 'false',
-      'region': 'Europe',
+      'region': 'Europe'
     },
     {
       'code': 'ru',
@@ -121,7 +121,7 @@ class AppConstants {
       'native': 'Русский',
       'flag': '🇷🇺',
       'rtl': 'false',
-      'region': 'Europe / Asia',
+      'region': 'Europe / Asia'
     },
     {
       'code': 'zh',
@@ -129,7 +129,7 @@ class AppConstants {
       'native': '中文',
       'flag': '🇨🇳',
       'rtl': 'false',
-      'region': 'Asia',
+      'region': 'Asia'
     },
     {
       'code': 'hi',
@@ -137,7 +137,7 @@ class AppConstants {
       'native': 'हिन्दी',
       'flag': '🇮🇳',
       'rtl': 'false',
-      'region': 'Asia',
+      'region': 'Asia'
     },
     {
       'code': 'ur',
@@ -145,7 +145,7 @@ class AppConstants {
       'native': 'اردو',
       'flag': '🇵🇰',
       'rtl': 'true',
-      'region': 'Asia',
+      'region': 'Asia'
     },
   ];
 }
