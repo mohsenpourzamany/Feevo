@@ -93,8 +93,7 @@ GoRouter createAppRouter(AuthProvider authProvider) {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Coming soon...',
-                style: TextStyle(color: Colors.white70)),
+            const Text('Coming soon...', style: TextStyle(color: Colors.white70)),
             const SizedBox(height: 8),
             Text(state.uri.toString(),
                 style: const TextStyle(color: Colors.white30, fontSize: 11)),
@@ -103,58 +102,19 @@ GoRouter createAppRouter(AuthProvider authProvider) {
       ),
     ),
     routes: [
-      GoRoute(
-          path: AppRoutes.splash,
-          name: 'splash',
-          builder: (c, s) => const SplashScreen()),
-      GoRoute(
-          path: AppRoutes.login,
-          name: 'login',
-          builder: (c, s) => const LoginScreen()),
-      GoRoute(
-          path: AppRoutes.register,
-          name: 'register',
-          builder: (c, s) => const RegisterScreen()),
-      GoRoute(
-          path: AppRoutes.forgotPass,
-          name: 'forgot-password',
-          builder: (c, s) => const ForgotPasswordScreen()),
-      GoRoute(
-          path: AppRoutes.verifyEmail,
-          name: 'verify-email',
-          builder: (c, s) => const VerifyEmailScreen()),
-      GoRoute(
-          path: AppRoutes.onboarding,
-          name: 'onboarding',
-          builder: (c, s) => const OnboardingScreen()),
-      GoRoute(
-          path: AppRoutes.genrePick,
-          name: 'genre-pick',
-          builder: (c, s) => const GenrePickScreen()),
-      GoRoute(
-          path: AppRoutes.home,
-          name: 'home',
-          builder: (c, s) => const HomeScreen()),
-      GoRoute(
-          path: AppRoutes.search,
-          name: 'search',
-          builder: (c, s) => const SearchScreen()),
-      GoRoute(
-          path: AppRoutes.moodFlow,
-          name: 'mood-flow',
-          builder: (c, s) => const MoodFlowScreen()),
-      GoRoute(
-          path: AppRoutes.nowPlaying,
-          name: 'now-playing',
-          builder: (c, s) => const NowPlayingScreen()),
-      GoRoute(
-          path: AppRoutes.lyrics,
-          name: 'lyrics',
-          builder: (c, s) => const LyricsScreen()),
-      GoRoute(
-          path: AppRoutes.queue,
-          name: 'queue',
-          builder: (c, s) => const QueueScreen()),
+      GoRoute(path: AppRoutes.splash,       name: 'splash',           builder: (c, s) => const SplashScreen()),
+      GoRoute(path: AppRoutes.login,        name: 'login',            builder: (c, s) => const LoginScreen()),
+      GoRoute(path: AppRoutes.register,     name: 'register',         builder: (c, s) => const RegisterScreen()),
+      GoRoute(path: AppRoutes.forgotPass,   name: 'forgot-password',  builder: (c, s) => const ForgotPasswordScreen()),
+      GoRoute(path: AppRoutes.verifyEmail,  name: 'verify-email',     builder: (c, s) => const VerifyEmailScreen()),
+      GoRoute(path: AppRoutes.onboarding,   name: 'onboarding',       builder: (c, s) => const OnboardingScreen()),
+      GoRoute(path: AppRoutes.genrePick,    name: 'genre-pick',       builder: (c, s) => const GenrePickScreen()),
+      GoRoute(path: AppRoutes.home,         name: 'home',             builder: (c, s) => const HomeScreen()),
+      GoRoute(path: AppRoutes.search,       name: 'search',           builder: (c, s) => const SearchScreen()),
+      GoRoute(path: AppRoutes.moodFlow,     name: 'mood-flow',        builder: (c, s) => const MoodFlowScreen()),
+      GoRoute(path: AppRoutes.nowPlaying,   name: 'now-playing',      builder: (c, s) => const NowPlayingScreen()),
+      GoRoute(path: AppRoutes.lyrics,       name: 'lyrics',           builder: (c, s) => const LyricsScreen()),
+      GoRoute(path: AppRoutes.queue,        name: 'queue',            builder: (c, s) => const QueueScreen()),
       GoRoute(
         path: AppRoutes.artist,
         name: 'artist',
@@ -164,53 +124,31 @@ GoRouter createAppRouter(AuthProvider authProvider) {
         },
       ),
       GoRoute(
-          path: AppRoutes.playlist,
-          name: 'playlist',
-          builder: (c, s) => const PlaylistDetailScreen()),
+        path: AppRoutes.playlist,
+        name: 'playlist',
+        builder: (c, s) {
+          final id = s.uri.queryParameters['id'] ?? '';
+          return PlaylistDetailScreen(playlistId: id);
+        },
+      ),
+      GoRoute(path: AppRoutes.liveRooms,    name: 'live-rooms',       builder: (c, s) => const LiveRoomsScreen()),
       GoRoute(
-          path: AppRoutes.liveRooms,
-          name: 'live-rooms',
-          builder: (c, s) => const LiveRoomsScreen()),
-      GoRoute(
-          path: AppRoutes.liveRoomIn,
-          name: 'live-room-inside',
-          builder: (c, s) => const LiveRoomInsideScreen()),
-      GoRoute(
-          path: AppRoutes.createRoom,
-          name: 'create-room',
-          builder: (c, s) => const CreateRoomScreen()),
-      GoRoute(
-          path: AppRoutes.memoryMap,
-          name: 'memory-map',
-          builder: (c, s) => const MemoryMapScreen()),
-      GoRoute(
-          path: AppRoutes.memoryDetail,
-          name: 'memory-detail',
-          builder: (c, s) => const MemoryDetailScreen()),
-      GoRoute(
-          path: AppRoutes.profile,
-          name: 'profile',
-          builder: (c, s) => const ProfileScreen()),
-      GoRoute(
-          path: AppRoutes.settings,
-          name: 'settings',
-          builder: (c, s) => const SettingsScreen()),
-      GoRoute(
-          path: AppRoutes.notifications,
-          name: 'notifications',
-          builder: (c, s) => const NotificationsScreen()),
-      GoRoute(
-          path: AppRoutes.language,
-          name: 'language',
-          builder: (c, s) => const LanguageScreen()),
-      GoRoute(
-          path: AppRoutes.premium,
-          name: 'premium',
-          builder: (c, s) => const PremiumScreen()),
-      GoRoute(
-          path: AppRoutes.editProfile,
-          name: 'edit-profile',
-          builder: (c, s) => const EditProfileScreen()),
+        path: AppRoutes.liveRoomIn,
+        name: 'live-room-inside',
+        builder: (c, s) {
+          final id = s.uri.queryParameters['id'] ?? '';
+          return LiveRoomInsideScreen(roomId: id);
+        },
+      ),
+      GoRoute(path: AppRoutes.createRoom,   name: 'create-room',      builder: (c, s) => const CreateRoomScreen()),
+      GoRoute(path: AppRoutes.memoryMap,    name: 'memory-map',       builder: (c, s) => const MemoryMapScreen()),
+      GoRoute(path: AppRoutes.memoryDetail, name: 'memory-detail',    builder: (c, s) => const MemoryDetailScreen()),
+      GoRoute(path: AppRoutes.profile,      name: 'profile',          builder: (c, s) => const ProfileScreen()),
+      GoRoute(path: AppRoutes.settings,     name: 'settings',         builder: (c, s) => const SettingsScreen()),
+      GoRoute(path: AppRoutes.notifications,name: 'notifications',    builder: (c, s) => const NotificationsScreen()),
+      GoRoute(path: AppRoutes.language,     name: 'language',         builder: (c, s) => const LanguageScreen()),
+      GoRoute(path: AppRoutes.premium,      name: 'premium',          builder: (c, s) => const PremiumScreen()),
+      GoRoute(path: AppRoutes.editProfile,  name: 'edit-profile',     builder: (c, s) => const EditProfileScreen()),
     ],
   );
 }

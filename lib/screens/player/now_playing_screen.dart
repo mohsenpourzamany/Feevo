@@ -7,6 +7,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_player_service.dart';
+import '../../core/providers/playlist_provider.dart';
+import '../../core/services/deezer_service.dart';
 
 class NowPlayingScreen extends StatefulWidget {
   const NowPlayingScreen({super.key});
@@ -17,7 +19,6 @@ class NowPlayingScreen extends StatefulWidget {
 
 class _NowPlayingScreenState extends State<NowPlayingScreen>
     with TickerProviderStateMixin {
-  bool _isLiked = false;
   bool _isShuffling = false;
 
   late AnimationController _vinylController;
@@ -27,14 +28,6 @@ class _NowPlayingScreenState extends State<NowPlayingScreen>
   late Animation<double> _contentOpacity;
   late Animation<Offset> _contentSlide;
   late Animation<double> _pulse;
-
-  final List<Map<String, dynamic>> _playlists = [
-    {'name': 'Late Night Chill', 'emoji': '🌙', 'count': 24, 'added': false},
-    {'name': 'Workout Bangers', 'emoji': '⚡', 'count': 18, 'added': false},
-    {'name': 'Study Mode', 'emoji': '💭', 'count': 32, 'added': false},
-    {'name': 'Friday Vibes', 'emoji': '🔥', 'count': 15, 'added': true},
-    {'name': 'Road Trip Mix', 'emoji': '🚗', 'count': 41, 'added': false},
-  ];
 
   @override
   void initState() {
@@ -46,6 +39,9 @@ class _NowPlayingScreenState extends State<NowPlayingScreen>
       if (service.currentTrack == null) {
         service.loadQueue(FeevoTrack.mockTracks);
       }
+      // Load playlists and liked songs
+      context.read<PlaylistProvider>().fetchPlaylists();
+      context.read<PlaylistProvider>().fetchLikedSongs();
     });
   }
 
@@ -93,15 +89,25 @@ class _NowPlayingScreenState extends State<NowPlayingScreen>
   }
 
   void _showAddToPlaylist() {
+    final track = context.read<AudioPlayerService>().currentTrack;
+    if (track == null) return;
+
+    final pp = context.read<PlaylistProvider>();
+    if (pp.playlists.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: const Text('Create a playlist first in your Profile'),
+        backgroundColor: AppColors.purple,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ));
+      return;
+    }
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => _AddToPlaylistSheet(
-        playlists: _playlists,
-        onToggle: (i) => setState(
-            () => _playlists[i]['added'] = !(_playlists[i]['added'] as bool)),
-      ),
+      builder: (_) => _RealPlaylistSheet(track: track, provider: pp),
     );
   }
 
@@ -274,31 +280,52 @@ class _NowPlayingScreenState extends State<NowPlayingScreen>
                                         ]),
                                   ),
                                   GestureDetector(
-                                    onTap: () =>
-                                        setState(() => _isLiked = !_isLiked),
-                                    child: AnimatedContainer(
-                                      duration:
-                                          const Duration(milliseconds: 200),
-                                      width: 40,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: _isLiked
-                                              ? AppColors.purple
-                                                  .withOpacity(0.2)
-                                              : AppColors.surface,
-                                          border: Border.all(
-                                              color: _isLiked
-                                                  ? AppColors.purple2
-                                                  : AppColors.border)),
-                                      child: Icon(
-                                          _isLiked
-                                              ? Icons.favorite_rounded
-                                              : Icons.favorite_border_rounded,
-                                          color: _isLiked
-                                              ? AppColors.purple3
-                                              : AppColors.textThird,
-                                          size: 20),
+                                    onTap: () {
+                                      if (track == null) return;
+                                      context
+                                          .read<PlaylistProvider>()
+                                          .toggleLike(DeezerTrack(
+                                            id: track.id,
+                                            title: track.title,
+                                            artist: track.artist,
+                                            artistId: '',
+                                            album: track.album,
+                                            albumArt: track.artworkUrl,
+                                            previewUrl: track.url,
+                                            durationSec: 0,
+                                            rank: 0,
+                                          ));
+                                    },
+                                    child: Consumer<PlaylistProvider>(
+                                      builder: (context, pp, _) {
+                                        final liked = track != null &&
+                                            pp.isLiked(track.id);
+                                        return AnimatedContainer(
+                                          duration:
+                                              const Duration(milliseconds: 200),
+                                          width: 40,
+                                          height: 40,
+                                          decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: liked
+                                                  ? AppColors.purple
+                                                      .withOpacity(0.2)
+                                                  : AppColors.surface,
+                                              border: Border.all(
+                                                  color: liked
+                                                      ? AppColors.purple2
+                                                      : AppColors.border)),
+                                          child: Icon(
+                                              liked
+                                                  ? Icons.favorite_rounded
+                                                  : Icons
+                                                      .favorite_border_rounded,
+                                              color: liked
+                                                  ? AppColors.purple3
+                                                  : AppColors.textThird,
+                                              size: 20),
+                                        );
+                                      },
                                     ),
                                   ),
                                 ]),
@@ -567,150 +594,135 @@ class _NowPlayingScreenState extends State<NowPlayingScreen>
   }
 }
 
-class _AddToPlaylistSheet extends StatefulWidget {
-  final List<Map<String, dynamic>> playlists;
-  final void Function(int) onToggle;
-  const _AddToPlaylistSheet({required this.playlists, required this.onToggle});
-
+class _RealPlaylistSheet extends StatefulWidget {
+  final FeevoTrack track;
+  final PlaylistProvider provider;
+  const _RealPlaylistSheet({required this.track, required this.provider});
   @override
-  State<_AddToPlaylistSheet> createState() => _AddToPlaylistSheetState();
+  State<_RealPlaylistSheet> createState() => _RealPlaylistSheetState();
 }
 
-class _AddToPlaylistSheetState extends State<_AddToPlaylistSheet> {
+class _RealPlaylistSheetState extends State<_RealPlaylistSheet> {
+  final Set<String> _added = {};
+
   @override
   Widget build(BuildContext context) {
+    final playlists = widget.provider.playlists;
     return Container(
       decoration: const BoxDecoration(
           color: Color(0xFF0F0F22),
           borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-              width: 40,
-              height: 4,
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(999))),
+        const SizedBox(height: 16),
+        const Row(children: [
+          Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                Text('Add to Playlist 🎵',
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary)),
+                SizedBox(height: 2),
+                Text('Select a playlist',
+                    style:
+                        TextStyle(fontSize: 11, color: AppColors.textSecond)),
+              ])),
+        ]),
+        const SizedBox(height: 16),
+        ...playlists.map((playlist) {
+          final isAdded = _added.contains(playlist.id);
+          return GestureDetector(
+            onTap: () async {
+              if (isAdded) return;
+              setState(() => _added.add(playlist.id));
+              final deezerTrack = DeezerTrack(
+                id: widget.track.id,
+                title: widget.track.title,
+                artist: widget.track.artist,
+                artistId: '',
+                album: widget.track.album,
+                albumArt: widget.track.artworkUrl,
+                previewUrl: widget.track.url,
+                durationSec: 0,
+                rank: 0,
+              );
+              await widget.provider
+                  .addTrackToPlaylist(playlist.id, deezerTrack);
+              if (mounted)
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('Added to "${playlist.name}" ✓'),
+                  backgroundColor: AppColors.success,
+                  behavior: SnackBarBehavior.floating,
+                  duration: const Duration(seconds: 1),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ));
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(999))),
-          const SizedBox(height: 16),
-          Row(children: [
-            const Expanded(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                  Text('Add to Playlist 🎵',
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary)),
-                  SizedBox(height: 2),
-                  Text('Select a playlist',
-                      style:
-                          TextStyle(fontSize: 11, color: AppColors.textSecond)),
-                ])),
-            GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                  decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.circular(999)),
-                  child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(Icons.add_rounded, color: Colors.white, size: 14),
-                    SizedBox(width: 4),
-                    Text('New',
-                        style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white))
-                  ])),
-            ),
-          ]),
-          const SizedBox(height: 16),
-          ...List.generate(widget.playlists.length, (i) {
-            final pl = widget.playlists[i];
-            final isAdded = pl['added'] as bool;
-            return GestureDetector(
-              onTap: () {
-                setState(() => widget.onToggle(i));
-                if (!isAdded)
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text('Added to "${pl['name']}" ✓'),
-                      backgroundColor: AppColors.success,
-                      behavior: SnackBarBehavior.floating,
-                      duration: const Duration(seconds: 1),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12))));
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.only(bottom: 8),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                decoration: BoxDecoration(
-                  gradient: isAdded
-                      ? LinearGradient(colors: [
-                          AppColors.purple.withOpacity(0.2),
-                          AppColors.cyan.withOpacity(0.08)
-                        ])
-                      : null,
-                  color: isAdded ? null : AppColors.surface,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                      color: isAdded ? AppColors.purple2 : AppColors.border,
-                      width: isAdded ? 1.5 : 1),
-                ),
-                child: Row(children: [
-                  Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(11),
-                          gradient: LinearGradient(colors: [
-                            AppColors.purple.withOpacity(isAdded ? 0.5 : 0.3),
-                            AppColors.cyan.withOpacity(0.2)
-                          ])),
-                      child: Center(
-                          child: Text(pl['emoji'] as String,
-                              style: const TextStyle(fontSize: 20)))),
-                  const SizedBox(width: 12),
-                  Expanded(
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                        Text(pl['name'] as String,
-                            style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary)),
-                        Text('${pl['count']} songs',
-                            style: const TextStyle(
-                                fontSize: 10, color: AppColors.textSecond)),
-                      ])),
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 26,
-                    height: 26,
-                    decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: isAdded ? AppColors.primaryGradient : null,
-                        color: isAdded ? null : AppColors.surface2,
-                        border: isAdded
-                            ? null
-                            : Border.all(color: AppColors.border)),
-                    child: Icon(
-                        isAdded ? Icons.check_rounded : Icons.add_rounded,
-                        color: isAdded ? Colors.white : AppColors.textThird,
-                        size: 14),
-                  ),
-                ]),
+                gradient: isAdded
+                    ? LinearGradient(colors: [
+                        AppColors.purple.withOpacity(0.2),
+                        AppColors.cyan.withOpacity(0.08)
+                      ])
+                    : null,
+                color: isAdded ? null : AppColors.surface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                    color: isAdded ? AppColors.purple2 : AppColors.border,
+                    width: isAdded ? 1.5 : 1),
               ),
-            );
-          }),
-        ],
-      ),
+              child: Row(children: [
+                Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(11),
+                        gradient: LinearGradient(colors: [
+                          AppColors.purple.withOpacity(isAdded ? 0.5 : 0.3),
+                          AppColors.cyan.withOpacity(0.2)
+                        ])),
+                    child: Center(
+                        child: Text(playlist.emoji,
+                            style: const TextStyle(fontSize: 20)))),
+                const SizedBox(width: 12),
+                Expanded(
+                    child: Text(playlist.name,
+                        style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary))),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: isAdded ? AppColors.primaryGradient : null,
+                      color: isAdded ? null : AppColors.surface2,
+                      border:
+                          isAdded ? null : Border.all(color: AppColors.border)),
+                  child: Icon(isAdded ? Icons.check_rounded : Icons.add_rounded,
+                      color: isAdded ? Colors.white : AppColors.textThird,
+                      size: 14),
+                ),
+              ]),
+            ),
+          );
+        }),
+      ]),
     );
   }
 }
