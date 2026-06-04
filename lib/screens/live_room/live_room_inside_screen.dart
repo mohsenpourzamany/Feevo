@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/providers/live_room_provider.dart';
@@ -46,6 +47,14 @@ class _LiveRoomInsideScreenState extends State<LiveRoomInsideScreen> with Ticker
     super.dispose();
   }
 
+  void _shareRoom(LiveRoom? room) {
+    if (room == null) return;
+    Share.share(
+      '🎵 Join me in "${room.name}" on Feevo!\n\nListen together live 🔴\n\nfeevo://live-room?id=${room.id}\n\nDownload Feevo: https://feevo.music',
+      subject: 'Join ${room.name} on Feevo',
+    );
+  }
+
   void _sendMessage() {
     if (_chatCtrl.text.trim().isEmpty) return;
     context.read<LiveRoomProvider>().sendMessage(_chatCtrl.text.trim());
@@ -85,8 +94,14 @@ class _LiveRoomInsideScreenState extends State<LiveRoomInsideScreen> with Ticker
                       Text(room?.name ?? 'Loading...', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary), overflow: TextOverflow.ellipsis),
                       Text('by ${room?.hostName ?? ''} · ${room?.listenerCount ?? 0} listeners', style: const TextStyle(fontSize: 10, color: AppColors.textSecond)),
                     ])),
-                    GestureDetector(onTap: () => setState(() => _isLiked = !_isLiked), child: Container(width: 34, height: 34, decoration: BoxDecoration(shape: BoxShape.circle, color: _isLiked ? AppColors.purple.withOpacity(0.2) : AppColors.surface, border: Border.all(color: _isLiked ? AppColors.purple2 : AppColors.border)), child: Icon(_isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded, color: _isLiked ? AppColors.purple3 : AppColors.textThird, size: 16))),
-                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () => _shareRoom(room),
+                      child: Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(gradient: AppColors.primaryGradient, borderRadius: BorderRadius.circular(999)), child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                        Icon(Icons.share_outlined, color: Colors.white, size: 12),
+                        SizedBox(width: 4),
+                        Text('Invite', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.white)),
+                      ])),
+                    ),
                     GestureDetector(
                       onTap: () { provider.leaveRoom(); context.pop(); },
                       child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7), decoration: BoxDecoration(color: AppColors.errorBg, borderRadius: BorderRadius.circular(999), border: Border.all(color: AppColors.error.withOpacity(0.3))), child: const Text('Leave', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.error))),

@@ -87,6 +87,8 @@ class AudioPlayerService extends ChangeNotifier {
 
   AudioPlayer get player => _player;
   List<FeevoTrack> get queue => _queue;
+  int get currentIndex => _currentIdx;
+
   int get currentIdx => _currentIdx;
   bool get isLoading => _isLoading;
   String? get error => _error;
@@ -270,10 +272,18 @@ class AudioPlayerService extends ChangeNotifier {
   }
 
   void removeFromQueue(int index) {
+    if (index < 0 || index >= _queue.length) return;
     if (index == _currentIdx) return;
     if (index < _currentIdx) _currentIdx--;
     _queue.removeAt(index);
     notifyListeners();
+  }
+
+  void clearQueueAfterCurrent() {
+    if (_currentIdx < _queue.length - 1) {
+      _queue.removeRange(_currentIdx + 1, _queue.length);
+      notifyListeners();
+    }
   }
 
   static String formatDuration(Duration d) {

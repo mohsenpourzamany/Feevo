@@ -35,6 +35,13 @@ class DeezerProvider extends ChangeNotifier {
   bool get isLoadingMood => _isLoadingMood;
   String? get moodError => _moodError;
 
+  // ── Top Charts ────────────────────────────────────────────
+  List<DeezerTrack> _topCharts = [];
+  bool _isLoadingCharts = false;
+
+  List<DeezerTrack> get topCharts => _topCharts;
+  bool get isLoadingCharts => _isLoadingCharts;
+
   // ── Search ────────────────────────────────────────────────────
   Future<void> search(String query) async {
     if (query.trim().isEmpty) {
@@ -99,7 +106,21 @@ class DeezerProvider extends ChangeNotifier {
   }
 
   // ── Mood Recommendations ──────────────────────────────────────
-  Future<void> loadMoodTracks(String mood) async {
+  // ── Top Charts ────────────────────────────────────────────
+  Future<void> loadTopCharts({int limit = 10}) async {
+    _isLoadingCharts = true;
+    notifyListeners();
+    try {
+      _topCharts = await _service.getTopCharts(limit: limit);
+    } catch (e) {
+      debugPrint('DeezerProvider loadTopCharts error: $e');
+    } finally {
+      _isLoadingCharts = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadMood(String mood) async {
     _isLoadingMood = true;
     _moodError = null;
     _moodTracks = [];
@@ -110,7 +131,7 @@ class DeezerProvider extends ChangeNotifier {
       _moodTracks = await _service.getTracksByGenre(genreId);
     } catch (e) {
       _moodError = 'خطا در دریافت پیشنهادات';
-      debugPrint('DeezerProvider moodTracks error: $e');
+      debugPrint('DeezerProvider loadMood error: $e');
     } finally {
       _isLoadingMood = false;
       notifyListeners();
