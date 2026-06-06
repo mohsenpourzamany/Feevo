@@ -56,5 +56,16 @@
     <key>NSAllowsArbitraryLoads</key>
     <true/>
 </dict>
+<key>CFBundleURLTypes</key>
+<array>
+    <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+            <string>feevo</string>
+        </array>
+        <key>CFBundleURLName</key>
+        <string>music.feevo.app</string>
+    </dict>
+</array>
 </dict>
 </plist>

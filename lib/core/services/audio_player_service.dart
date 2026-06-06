@@ -32,48 +32,7 @@ class FeevoTrack {
         extras: {'emoji': emoji},
       );
 
-  static List<FeevoTrack> get mockTracks => [
-        const FeevoTrack(
-          id: '1',
-          title: 'Midnight City',
-          artist: 'M83',
-          album: 'Hurry Up, We\'re Dreaming',
-          emoji: '🎵',
-          url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-        ),
-        const FeevoTrack(
-          id: '2',
-          title: 'Electronic Dreams',
-          artist: 'Feevo Radio',
-          album: 'Chill Mix',
-          emoji: '🌊',
-          url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-        ),
-        const FeevoTrack(
-          id: '3',
-          title: 'Night Drive',
-          artist: 'Feevo Radio',
-          album: 'Late Night',
-          emoji: '🌙',
-          url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
-        ),
-        const FeevoTrack(
-          id: '4',
-          title: 'Deep Focus',
-          artist: 'Feevo Radio',
-          album: 'Study Mode',
-          emoji: '💭',
-          url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
-        ),
-        const FeevoTrack(
-          id: '5',
-          title: 'Energy Boost',
-          artist: 'Feevo Radio',
-          album: 'Workout',
-          emoji: '⚡',
-          url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
-        ),
-      ];
+  static List<FeevoTrack> get mockTracks => [];
 }
 
 // ── Audio Player Service ──────────────────────────────────────
@@ -113,7 +72,7 @@ class AudioPlayerService extends ChangeNotifier {
   Stream<PlayerState> get playerStateStream => _player.playerStateStream;
   Stream<bool> get playingStream => _player.playingStream;
 
-  AudioPlayerService() {
+  AudioPlayerService() : _currentIdx = 0 {
     _init();
   }
 
@@ -273,6 +232,7 @@ class AudioPlayerService extends ChangeNotifier {
 
   void removeFromQueue(int index) {
     if (index < 0 || index >= _queue.length) return;
+    // If removing current track, ignore. Adjust current index when removing earlier items.
     if (index == _currentIdx) return;
     if (index < _currentIdx) _currentIdx--;
     _queue.removeAt(index);

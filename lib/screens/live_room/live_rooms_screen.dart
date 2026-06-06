@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/router/app_router.dart';
@@ -19,9 +20,7 @@ class _LiveRoomsScreenState extends State<LiveRoomsScreen>
   String _selectedFilter = 'all';
   String _searchQuery = '';
 
-  late AnimationController _catController;
-  late AnimationController _floatController;
-  late AnimationController _contentController;
+  late AnimationController _catController, _floatController, _contentController;
   late Animation<double> _catScale, _catOpacity, _catFloat, _contentOpacity;
   late Animation<Offset> _contentSlide;
 
@@ -59,7 +58,6 @@ class _LiveRoomsScreenState extends State<LiveRoomsScreen>
     Future.delayed(const Duration(milliseconds: 150), () {
       if (mounted) _contentController.forward();
     });
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<LiveRoomProvider>().fetchRooms();
     });
@@ -80,450 +78,409 @@ class _LiveRoomsScreenState extends State<LiveRoomsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.bg,
-      body: Stack(
-        children: [
-          Positioned.fill(child: CustomPaint(painter: _GridPainter())),
-          Positioned(
-              top: -120,
-              left: -80,
-              child: Container(
-                  width: 380,
-                  height: 380,
-                  decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(colors: [
-                        AppColors.purple.withOpacity(0.15),
-                        AppColors.purple.withOpacity(0)
-                      ])))),
-          SafeArea(
-            child: Column(
-              children: [
-                Expanded(
-                  child: SlideTransition(
-                    position: _contentSlide,
-                    child: FadeTransition(
-                      opacity: _contentOpacity,
-                      child: Consumer<LiveRoomProvider>(
-                        builder: (context, provider, _) {
-                          final rooms = provider.rooms.where((r) {
-                            final matchFilter = _selectedFilter == 'all' ||
-                                r.vibe == _selectedFilter;
-                            final matchSearch = _searchQuery.isEmpty ||
-                                r.name
-                                    .toLowerCase()
-                                    .contains(_searchQuery.toLowerCase()) ||
-                                r.hostName
-                                    .toLowerCase()
-                                    .contains(_searchQuery.toLowerCase());
-                            return matchFilter && matchSearch;
-                          }).toList();
+      body: Stack(children: [
+        Positioned.fill(child: CustomPaint(painter: _GridPainter())),
+        Positioned(
+            top: -120,
+            left: -80,
+            child: Container(
+                width: 380,
+                height: 380,
+                decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(colors: [
+                      AppColors.purple.withOpacity(0.15),
+                      AppColors.purple.withOpacity(0)
+                    ])))),
+        SafeArea(
+          child: Column(children: [
+            Expanded(
+              child: SlideTransition(
+                position: _contentSlide,
+                child: FadeTransition(
+                  opacity: _contentOpacity,
+                  child: Consumer<LiveRoomProvider>(
+                    builder: (context, provider, _) {
+                      final rooms = provider.rooms.where((r) {
+                        final matchFilter = _selectedFilter == 'all' ||
+                            r.vibe == _selectedFilter;
+                        final matchSearch = _searchQuery.isEmpty ||
+                            r.name
+                                .toLowerCase()
+                                .contains(_searchQuery.toLowerCase()) ||
+                            r.hostName
+                                .toLowerCase()
+                                .contains(_searchQuery.toLowerCase());
+                        return matchFilter && matchSearch;
+                      }).toList();
 
-                          return ListView(
-                            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-                            children: [
-                              // header
-                              Row(children: [
-                                Expanded(
-                                    child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                      ShaderMask(
-                                          shaderCallback: (b) => AppColors
-                                              .primaryGradient
-                                              .createShader(b),
-                                          child: const Text('Live Rooms 🏠',
-                                              style: TextStyle(
-                                                  fontSize: 22,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: Colors.white,
-                                                  letterSpacing: -0.3))),
-                                      const SizedBox(height: 3),
-                                      const Text(
-                                          'Listen together, feel together',
-                                          style: TextStyle(
-                                              fontSize: 12,
-                                              color: AppColors.textSecond)),
-                                    ])),
-                                AnimatedBuilder(
-                                  animation: Listenable.merge(
-                                      [_catController, _floatController]),
-                                  builder: (_, __) => Opacity(
-                                      opacity: _catOpacity.value,
-                                      child: Transform.scale(
-                                          scale: _catScale.value,
-                                          child: Transform.translate(
-                                              offset:
-                                                  Offset(0, _catFloat.value),
-                                              child: Image.asset(
-                                                  AppConstants.cat1,
-                                                  width: 70,
-                                                  height: 70,
-                                                  fit: BoxFit.contain)))),
-                                ),
-                              ]),
-
-                              const SizedBox(height: 16),
-
-                              // create room button
-                              GestureDetector(
-                                onTap: () => context.push(AppRoutes.createRoom),
-                                child: Container(
-                                  width: double.infinity,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 14),
-                                  decoration: BoxDecoration(
-                                      gradient: AppColors.primaryGradient,
-                                      borderRadius: BorderRadius.circular(16),
-                                      boxShadow: [
-                                        BoxShadow(
-                                            color: AppColors.purple
-                                                .withOpacity(0.4),
-                                            blurRadius: 16,
-                                            offset: const Offset(0, 6))
-                                      ]),
-                                  child: const Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(Icons.add_circle_outline_rounded,
-                                            color: Colors.white, size: 20),
-                                        SizedBox(width: 8),
-                                        Text('Create a Room',
-                                            style: TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w700,
-                                                color: Colors.white)),
-                                      ]),
-                                ),
-                              ),
-
-                              const SizedBox(height: 12),
-
-                              // search bar
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: AppColors.surface,
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(
-                                      color: _searchQuery.isNotEmpty
-                                          ? AppColors.purple
-                                          : AppColors.border,
-                                      width: _searchQuery.isNotEmpty ? 1.5 : 1),
-                                ),
-                                child: Row(children: [
-                                  const SizedBox(width: 12),
-                                  Icon(Icons.search_rounded,
-                                      color: _searchQuery.isNotEmpty
-                                          ? AppColors.purple3
-                                          : AppColors.textThird,
-                                      size: 18),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                      child: TextField(
-                                    onChanged: (v) =>
-                                        setState(() => _searchQuery = v),
-                                    style: const TextStyle(
-                                        fontSize: 13,
-                                        color: AppColors.textPrimary),
-                                    decoration: const InputDecoration(
-                                        hintText: 'Search rooms or hosts...',
-                                        hintStyle: TextStyle(
-                                            fontSize: 12,
-                                            color: AppColors.textThird),
-                                        border: InputBorder.none,
-                                        isDense: true,
-                                        contentPadding:
-                                            EdgeInsets.symmetric(vertical: 12)),
-                                  )),
-                                  if (_searchQuery.isNotEmpty)
-                                    GestureDetector(
-                                        onTap: () =>
-                                            setState(() => _searchQuery = ''),
-                                        child: const Padding(
-                                            padding: EdgeInsets.all(10),
-                                            child: Icon(Icons.close_rounded,
-                                                color: AppColors.textThird,
-                                                size: 16))),
-                                ]),
-                              ),
-
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                height: 34,
-                                child: ListView.separated(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: _filters.length,
-                                  separatorBuilder: (_, __) =>
-                                      const SizedBox(width: 8),
-                                  itemBuilder: (context, i) {
-                                    final filter = _filters[i];
-                                    final active =
-                                        _selectedFilter == filter['id'];
-                                    return GestureDetector(
-                                      onTap: () => setState(() =>
-                                          _selectedFilter = filter['id']!),
-                                      child: AnimatedContainer(
-                                        duration:
-                                            const Duration(milliseconds: 200),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 14),
-                                        decoration: BoxDecoration(
-                                          gradient: active
-                                              ? LinearGradient(colors: [
-                                                  AppColors.purple
-                                                      .withOpacity(0.3),
-                                                  AppColors.cyan
-                                                      .withOpacity(0.15)
-                                                ])
-                                              : null,
-                                          color:
-                                              active ? null : AppColors.surface,
-                                          borderRadius:
-                                              BorderRadius.circular(999),
-                                          border: Border.all(
-                                              color: active
-                                                  ? AppColors.purple2
-                                                  : AppColors.border,
-                                              width: active ? 1.5 : 1),
-                                        ),
-                                        child: Center(
-                                            child: Text(filter['label']!,
-                                                style: TextStyle(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.w500,
-                                                    color: active
-                                                        ? AppColors.purple3
-                                                        : AppColors
-                                                            .textSecond))),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-
-                              const SizedBox(height: 14),
-
-                              // loading / error / rooms
-                              if (provider.isLoadingRooms)
-                                const Center(
-                                    child: Padding(
-                                        padding:
-                                            EdgeInsets.symmetric(vertical: 40),
-                                        child: CircularProgressIndicator(
-                                            color: AppColors.purple,
-                                            strokeWidth: 2)))
-                              else if (provider.roomsError != null)
-                                Center(
-                                    child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 40),
-                                        child: Text(provider.roomsError!,
-                                            style: const TextStyle(
-                                                color: AppColors.textSecond))))
-                              else if (rooms.isEmpty)
-                                Center(
-                                    child: Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 40),
-                                  child: Column(children: [
-                                    Image.asset(AppConstants.cat3,
-                                        width: 80, height: 80),
-                                    const SizedBox(height: 12),
-                                    const Text('No rooms yet',
+                      return ListView(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                        children: [
+                          Row(children: [
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  ShaderMask(
+                                      shaderCallback: (b) => AppColors
+                                          .primaryGradient
+                                          .createShader(b),
+                                      child: Text('${l.liveRooms} 🏠',
+                                          style: const TextStyle(
+                                              fontSize: 22,
+                                              fontWeight: FontWeight.w800,
+                                              color: Colors.white,
+                                              letterSpacing: -0.3))),
+                                  const SizedBox(height: 3),
+                                  const Text('Listen together, feel together',
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.textSecond)),
+                                ])),
+                            AnimatedBuilder(
+                              animation: Listenable.merge(
+                                  [_catController, _floatController]),
+                              builder: (_, __) => Opacity(
+                                  opacity: _catOpacity.value,
+                                  child: Transform.scale(
+                                      scale: _catScale.value,
+                                      child: Transform.translate(
+                                          offset: Offset(0, _catFloat.value),
+                                          child: Image.asset(AppConstants.cat1,
+                                              width: 70,
+                                              height: 70,
+                                              fit: BoxFit.contain)))),
+                            ),
+                          ]),
+                          const SizedBox(height: 16),
+                          GestureDetector(
+                            onTap: () => context.push(AppRoutes.createRoom),
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              decoration: BoxDecoration(
+                                  gradient: AppColors.primaryGradient,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                        color:
+                                            AppColors.purple.withOpacity(0.4),
+                                        blurRadius: 16,
+                                        offset: const Offset(0, 6))
+                                  ]),
+                              child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.add_circle_outline_rounded,
+                                        color: Colors.white, size: 20),
+                                    SizedBox(width: 8),
+                                    Text('Create a Room',
                                         style: TextStyle(
                                             fontSize: 14,
-                                            color: AppColors.textSecond)),
-                                    const Text('Be the first to go live!',
-                                        style: TextStyle(
-                                            fontSize: 12,
-                                            color: AppColors.textThird)),
+                                            fontWeight: FontWeight.w700,
+                                            color: Colors.white)),
                                   ]),
-                                ))
-                              else ...[
-                                Row(children: [
-                                  Container(
-                                      width: 6,
-                                      height: 6,
-                                      decoration: const BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: AppColors.error)),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                      '${rooms.where((r) => r.isLive).length} rooms live now',
-                                      style: const TextStyle(
-                                          fontSize: 11,
-                                          color: AppColors.textSecond,
-                                          fontWeight: FontWeight.w500)),
-                                ]),
-                                const SizedBox(height: 10),
-                                ...rooms.map((room) => Padding(
-                                      padding:
-                                          const EdgeInsets.only(bottom: 10),
-                                      child: GestureDetector(
-                                        onTap: () => context.push(
-                                            '${AppRoutes.liveRoomIn}?id=${room.id}'),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(14),
-                                          decoration: BoxDecoration(
-                                            gradient: room.isLive
-                                                ? LinearGradient(
-                                                    begin: Alignment.topLeft,
-                                                    end: Alignment.bottomRight,
-                                                    colors: [
-                                                        AppColors.purple
-                                                            .withOpacity(0.15),
-                                                        AppColors.purple
-                                                            .withOpacity(0.08)
-                                                      ])
-                                                : null,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                    color: _searchQuery.isNotEmpty
+                                        ? AppColors.purple
+                                        : AppColors.border,
+                                    width: _searchQuery.isNotEmpty ? 1.5 : 1)),
+                            child: Row(children: [
+                              const SizedBox(width: 12),
+                              Icon(Icons.search_rounded,
+                                  color: _searchQuery.isNotEmpty
+                                      ? AppColors.purple3
+                                      : AppColors.textThird,
+                                  size: 18),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                  child: TextField(
+                                onChanged: (v) =>
+                                    setState(() => _searchQuery = v),
+                                style: const TextStyle(
+                                    fontSize: 13, color: AppColors.textPrimary),
+                                decoration: InputDecoration(
+                                    hintText: '${l.search}...',
+                                    hintStyle: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.textThird),
+                                    border: InputBorder.none,
+                                    isDense: true,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        vertical: 12)),
+                              )),
+                              if (_searchQuery.isNotEmpty)
+                                GestureDetector(
+                                    onTap: () =>
+                                        setState(() => _searchQuery = ''),
+                                    child: const Padding(
+                                        padding: EdgeInsets.all(10),
+                                        child: Icon(Icons.close_rounded,
+                                            color: AppColors.textThird,
+                                            size: 16))),
+                            ]),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            height: 34,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: _filters.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(width: 8),
+                              itemBuilder: (context, i) {
+                                final filter = _filters[i];
+                                final active = _selectedFilter == filter['id'];
+                                return GestureDetector(
+                                  onTap: () => setState(
+                                      () => _selectedFilter = filter['id']!),
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 14),
+                                    decoration: BoxDecoration(
+                                        gradient: active
+                                            ? LinearGradient(colors: [
+                                                AppColors.purple
+                                                    .withOpacity(0.3),
+                                                AppColors.cyan.withOpacity(0.15)
+                                              ])
+                                            : null,
+                                        color:
+                                            active ? null : AppColors.surface,
+                                        borderRadius:
+                                            BorderRadius.circular(999),
+                                        border: Border.all(
+                                            color: active
+                                                ? AppColors.purple2
+                                                : AppColors.border,
+                                            width: active ? 1.5 : 1)),
+                                    child: Center(
+                                        child: Text(filter['label']!,
+                                            style: TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w500,
+                                                color: active
+                                                    ? AppColors.purple3
+                                                    : AppColors.textSecond))),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          if (provider.isLoadingRooms)
+                            const Center(
+                                child: Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 40),
+                                    child: CircularProgressIndicator(
+                                        color: AppColors.purple,
+                                        strokeWidth: 2)))
+                          else if (provider.roomsError != null)
+                            Center(
+                                child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 40),
+                                    child: Text(provider.roomsError!,
+                                        style: const TextStyle(
+                                            color: AppColors.textSecond))))
+                          else if (rooms.isEmpty)
+                            Center(
+                                child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 40),
+                              child: Column(children: [
+                                Image.asset(AppConstants.cat3,
+                                    width: 80, height: 80),
+                                const SizedBox(height: 12),
+                                Text(l.noLiveRooms,
+                                    style: const TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecond)),
+                              ]),
+                            ))
+                          else ...[
+                            Row(children: [
+                              Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: AppColors.error)),
+                              const SizedBox(width: 6),
+                              Text(
+                                  '${rooms.where((r) => r.isLive).length} ${l.rooms} live now',
+                                  style: const TextStyle(
+                                      fontSize: 11,
+                                      color: AppColors.textSecond,
+                                      fontWeight: FontWeight.w500)),
+                            ]),
+                            const SizedBox(height: 10),
+                            ...rooms.map((room) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 10),
+                                  child: GestureDetector(
+                                    onTap: () => context.push(
+                                        '${AppRoutes.liveRoomIn}?id=${room.id}'),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(14),
+                                      decoration: BoxDecoration(
+                                        gradient: room.isLive
+                                            ? LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [
+                                                    AppColors.purple
+                                                        .withOpacity(0.15),
+                                                    AppColors.purple
+                                                        .withOpacity(0.08)
+                                                  ])
+                                            : null,
+                                        color: room.isLive
+                                            ? null
+                                            : AppColors.surface,
+                                        borderRadius: BorderRadius.circular(18),
+                                        border: Border.all(
                                             color: room.isLive
-                                                ? null
-                                                : AppColors.surface,
-                                            borderRadius:
-                                                BorderRadius.circular(18),
-                                            border: Border.all(
-                                                color: room.isLive
-                                                    ? AppColors.border2
-                                                    : AppColors.border),
-                                          ),
-                                          child: Row(children: [
-                                            Container(
-                                              width: 52,
-                                              height: 52,
-                                              decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(15),
-                                                  gradient:
-                                                      AppColors.primaryGradient,
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                        color: AppColors.purple
-                                                            .withOpacity(0.3),
-                                                        blurRadius: 10,
-                                                        offset:
-                                                            const Offset(0, 4))
-                                                  ]),
-                                              child: Center(
-                                                  child: Text(room.vibeEmoji,
-                                                      style: const TextStyle(
-                                                          fontSize: 24))),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                                child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                  Text(room.name,
-                                                      style: const TextStyle(
-                                                          fontSize: 13,
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                          color: AppColors
-                                                              .textPrimary)),
-                                                  const SizedBox(height: 2),
-                                                  Text('by ${room.hostName}',
+                                                ? AppColors.border2
+                                                : AppColors.border),
+                                      ),
+                                      child: Row(children: [
+                                        Container(
+                                            width: 52,
+                                            height: 52,
+                                            decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(15),
+                                                gradient:
+                                                    AppColors.primaryGradient,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                      color: AppColors.purple
+                                                          .withOpacity(0.3),
+                                                      blurRadius: 10,
+                                                      offset:
+                                                          const Offset(0, 4))
+                                                ]),
+                                            child: Center(
+                                                child: Text(room.vibeEmoji,
+                                                    style: const TextStyle(
+                                                        fontSize: 24)))),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                            child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                              Text(room.name,
+                                                  style: const TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      color: AppColors
+                                                          .textPrimary)),
+                                              const SizedBox(height: 2),
+                                              Text('by ${room.hostName}',
+                                                  style: const TextStyle(
+                                                      fontSize: 10,
+                                                      color:
+                                                          AppColors.purple3)),
+                                              if (room.currentTrack !=
+                                                  null) ...[
+                                                const SizedBox(height: 3),
+                                                Text(room.currentTrack!,
+                                                    style: const TextStyle(
+                                                        fontSize: 10,
+                                                        color: AppColors
+                                                            .textSecond),
+                                                    overflow:
+                                                        TextOverflow.ellipsis),
+                                              ],
+                                            ])),
+                                        const SizedBox(width: 8),
+                                        Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.end,
+                                            children: [
+                                              if (room.isLive)
+                                                _LiveBadge()
+                                              else
+                                                Container(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 3),
+                                                    decoration: BoxDecoration(
+                                                        color:
+                                                            AppColors.surface2,
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(999),
+                                                        border: Border.all(
+                                                            color: AppColors
+                                                                .border)),
+                                                    child: const Text('Soon',
+                                                        style: TextStyle(
+                                                            fontSize: 8,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            color: AppColors
+                                                                .textThird))),
+                                              const SizedBox(height: 6),
+                                              if (room.listenerCount > 0)
+                                                Row(children: [
+                                                  const Icon(
+                                                      Icons.headphones_rounded,
+                                                      color:
+                                                          AppColors.textThird,
+                                                      size: 12),
+                                                  const SizedBox(width: 3),
+                                                  Text(
+                                                      _formatListeners(
+                                                          room.listenerCount),
                                                       style: const TextStyle(
                                                           fontSize: 10,
                                                           color: AppColors
-                                                              .purple3)),
-                                                  if (room.currentTrack !=
-                                                      null) ...[
-                                                    const SizedBox(height: 3),
-                                                    Text(room.currentTrack!,
-                                                        style: const TextStyle(
-                                                            fontSize: 10,
-                                                            color: AppColors
-                                                                .textSecond),
-                                                        overflow: TextOverflow
-                                                            .ellipsis),
-                                                  ],
-                                                ])),
-                                            const SizedBox(width: 8),
-                                            Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.end,
-                                                children: [
-                                                  if (room.isLive)
-                                                    _LiveBadge()
-                                                  else
-                                                    Container(
-                                                        padding:
-                                                            const EdgeInsets.symmetric(
-                                                                horizontal: 8,
-                                                                vertical: 3),
-                                                        decoration: BoxDecoration(
-                                                            color: AppColors
-                                                                .surface2,
-                                                            borderRadius:
-                                                                BorderRadius.circular(
-                                                                    999),
-                                                            border: Border.all(
-                                                                color: AppColors
-                                                                    .border)),
-                                                        child: const Text(
-                                                            'Soon',
-                                                            style: TextStyle(
-                                                                fontSize: 8,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w600,
-                                                                color: AppColors
-                                                                    .textThird))),
-                                                  const SizedBox(height: 6),
-                                                  if (room.listenerCount > 0)
-                                                    Row(children: [
-                                                      const Icon(
-                                                          Icons
-                                                              .headphones_rounded,
-                                                          color: AppColors
-                                                              .textThird,
-                                                          size: 12),
-                                                      const SizedBox(width: 3),
-                                                      Text(
-                                                          _formatListeners(room
-                                                              .listenerCount),
-                                                          style: const TextStyle(
-                                                              fontSize: 10,
-                                                              color: AppColors
-                                                                  .textThird)),
-                                                    ]),
-                                                  const SizedBox(height: 4),
-                                                  GestureDetector(
-                                                    onTap: () => Share.share(
-                                                      '🎵 Join "${room.name}" on Feevo!\n\nfeevo://live-room?id=${room.id}\n\nhttps://feevo.music',
-                                                      subject:
-                                                          'Join ${room.name} on Feevo',
-                                                    ),
-                                                    child: const Icon(
-                                                        Icons.share_outlined,
-                                                        color:
-                                                            AppColors.textThird,
-                                                        size: 16),
-                                                  ),
+                                                              .textThird)),
                                                 ]),
-                                          ]),
-                                        ),
-                                      ),
-                                    )),
-                              ],
-                            ],
-                          );
-                        },
-                      ),
-                    ),
+                                              const SizedBox(height: 4),
+                                              GestureDetector(
+                                                onTap: () => Share.share(
+                                                    '🎵 Join "${room.name}" on Feevo!\n\nfeevo://live-room?id=${room.id}\n\nhttps://feevo.music',
+                                                    subject:
+                                                        'Join ${room.name} on Feevo'),
+                                                child: const Icon(
+                                                    Icons.share_outlined,
+                                                    color: AppColors.textThird,
+                                                    size: 16),
+                                              ),
+                                            ]),
+                                      ]),
+                                    ),
+                                  ),
+                                )),
+                          ],
+                        ],
+                      );
+                    },
                   ),
                 ),
-                const FeevoBottomNav(currentIndex: -1),
-              ],
+              ),
             ),
-          ),
-        ],
-      ),
+            const FeevoBottomNav(currentIndex: -1),
+          ]),
+        ),
+      ]),
     );
   }
 }

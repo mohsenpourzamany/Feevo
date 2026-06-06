@@ -8,6 +8,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_player_service.dart';
 import '../../core/providers/playlist_provider.dart';
+import '../../core/providers/memory_provider.dart';
 import '../../core/services/deezer_service.dart';
 
 class NowPlayingScreen extends StatefulWidget {
@@ -29,19 +30,22 @@ class _NowPlayingScreenState extends State<NowPlayingScreen>
   late Animation<Offset> _contentSlide;
   late Animation<double> _pulse;
 
+  AudioPlayerService? _audioService;
+
   @override
   void initState() {
     super.initState();
     _setupAnimations();
     _playEntrance();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final service = context.read<AudioPlayerService>();
-      if (service.currentTrack == null) {
-        service.loadQueue(FeevoTrack.mockTracks);
+      if (!mounted) return;
+      _audioService = context.read<AudioPlayerService>();
+      if (_audioService!.currentTrack == null) {
+        _audioService!.loadQueue(FeevoTrack.mockTracks);
       }
-      // Load playlists and liked songs
       context.read<PlaylistProvider>().fetchPlaylists();
       context.read<PlaylistProvider>().fetchLikedSongs();
+      _audioService!.addListener(_onTrackChanged);
     });
   }
 
@@ -72,8 +76,28 @@ class _NowPlayingScreenState extends State<NowPlayingScreen>
     });
   }
 
+  void _onTrackChanged() {
+    if (!mounted || _audioService == null) return;
+    final track = _audioService!.currentTrack;
+    if (track != null && _audioService!.isPlaying) {
+      final deezerTrack = DeezerTrack(
+        id: track.id,
+        title: track.title,
+        artist: track.artist,
+        artistId: '',
+        album: track.album,
+        albumArt: track.artworkUrl,
+        previewUrl: track.url,
+        durationSec: 0,
+        rank: 0,
+      );
+      context.read<MemoryProvider>().saveMemory(deezerTrack, 'chill');
+    }
+  }
+
   @override
   void dispose() {
+    _audioService?.removeListener(_onTrackChanged);
     _vinylController.dispose();
     _contentController.dispose();
     _pulseController.dispose();

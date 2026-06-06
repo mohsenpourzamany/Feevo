@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
@@ -89,7 +90,6 @@ class _SearchScreenState extends State<SearchScreen>
     Future.delayed(const Duration(milliseconds: 150), () {
       if (mounted) _contentController.forward();
     });
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DeezerProvider>().loadTopCharts(limit: 10);
     });
@@ -125,156 +125,142 @@ class _SearchScreenState extends State<SearchScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.bg,
-      body: Stack(
-        children: [
-          Positioned.fill(child: CustomPaint(painter: _GridPainter())),
-          Positioned(
-              top: -120,
-              right: -60,
-              child: Container(
-                  width: 350,
-                  height: 350,
-                  decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(colors: [
-                        AppColors.purple.withOpacity(0.12),
-                        AppColors.purple.withOpacity(0)
-                      ])))),
-          SafeArea(
-            child: Column(
-              children: [
-                Expanded(
-                  child: SlideTransition(
-                    position: _contentSlide,
-                    child: FadeTransition(
-                      opacity: _contentOpacity,
-                      child: ListView(
-                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-                        children: [
-                          const Text('Search 🔍',
-                              style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.textPrimary,
-                                  letterSpacing: -0.3)),
-                          const SizedBox(height: 14),
-
-                          // search bar
-                          Container(
-                            decoration: BoxDecoration(
-                                color: AppColors.surface,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                    color: _isSearching
-                                        ? AppColors.purple
-                                        : AppColors.border,
-                                    width: _isSearching ? 1.5 : 1)),
-                            child: Row(children: [
-                              const SizedBox(width: 14),
-                              Icon(Icons.search_rounded,
-                                  color: _isSearching
-                                      ? AppColors.purple3
-                                      : AppColors.textThird,
-                                  size: 20),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                  child: TextField(
-                                controller: _searchCtrl,
-                                onChanged: _onSearchChanged,
-                                style: const TextStyle(
-                                    fontSize: 14, color: AppColors.textPrimary),
-                                decoration: const InputDecoration(
-                                    hintText: 'Songs, artists, albums...',
-                                    hintStyle: TextStyle(
-                                        fontSize: 13,
-                                        color: AppColors.textThird),
-                                    border: InputBorder.none,
-                                    isDense: true,
-                                    contentPadding:
-                                        EdgeInsets.symmetric(vertical: 14)),
-                              )),
-                              if (_isSearching)
-                                GestureDetector(
-                                    onTap: _clearSearch,
-                                    child: const Padding(
-                                        padding: EdgeInsets.all(12),
-                                        child: Icon(Icons.close_rounded,
-                                            color: AppColors.textThird,
-                                            size: 18)))
-                              else
-                                const SizedBox(width: 14),
-                            ]),
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          // cat hint
-                          AnimatedBuilder(
-                            animation: _catController,
-                            builder: (_, __) => Opacity(
-                                opacity: _catOpacity.value,
-                                child: Transform.scale(
-                                    scale: _catScale.value,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 14, vertical: 10),
-                                      decoration: BoxDecoration(
-                                          gradient: LinearGradient(colors: [
-                                            AppColors.purple.withOpacity(0.1),
-                                            AppColors.cyan.withOpacity(0.06)
-                                          ]),
-                                          borderRadius:
-                                              BorderRadius.circular(14),
-                                          border: Border.all(
-                                              color: AppColors.purple
-                                                  .withOpacity(0.2))),
-                                      child: Row(children: [
-                                        Image.asset(AppConstants.cat6,
-                                            width: 40,
-                                            height: 40,
-                                            fit: BoxFit.contain),
-                                        const SizedBox(width: 10),
-                                        const Expanded(
-                                            child: Text(
-                                                '"Try searching your favorite artist..."',
-                                                style: TextStyle(
-                                                    fontSize: 11,
-                                                    color: AppColors.purple3,
-                                                    fontStyle:
-                                                        FontStyle.italic))),
-                                      ]),
-                                    ))),
-                          ),
-
-                          const SizedBox(height: 20),
-
+      body: Stack(children: [
+        Positioned.fill(child: CustomPaint(painter: _GridPainter())),
+        Positioned(
+            top: -120,
+            right: -60,
+            child: Container(
+                width: 350,
+                height: 350,
+                decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(colors: [
+                      AppColors.purple.withOpacity(0.12),
+                      AppColors.purple.withOpacity(0)
+                    ])))),
+        SafeArea(
+          child: Column(children: [
+            Expanded(
+              child: SlideTransition(
+                position: _contentSlide,
+                child: FadeTransition(
+                  opacity: _contentOpacity,
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                    children: [
+                      Text('${l.search} 🔍',
+                          style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimary,
+                              letterSpacing: -0.3)),
+                      const SizedBox(height: 14),
+                      Container(
+                        decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                                color: _isSearching
+                                    ? AppColors.purple
+                                    : AppColors.border,
+                                width: _isSearching ? 1.5 : 1)),
+                        child: Row(children: [
+                          const SizedBox(width: 14),
+                          Icon(Icons.search_rounded,
+                              color: _isSearching
+                                  ? AppColors.purple3
+                                  : AppColors.textThird,
+                              size: 20),
+                          const SizedBox(width: 10),
+                          Expanded(
+                              child: TextField(
+                            controller: _searchCtrl,
+                            onChanged: _onSearchChanged,
+                            style: const TextStyle(
+                                fontSize: 14, color: AppColors.textPrimary),
+                            decoration: InputDecoration(
+                                hintText: '${l.search}...',
+                                hintStyle: const TextStyle(
+                                    fontSize: 13, color: AppColors.textThird),
+                                border: InputBorder.none,
+                                isDense: true,
+                                contentPadding:
+                                    const EdgeInsets.symmetric(vertical: 14)),
+                          )),
                           if (_isSearching)
-                            _buildSearchResults()
-                          else ...[
-                            _buildCategories(),
-                            const SizedBox(height: 20),
-                            _buildTrending(),
-                          ],
-                        ],
+                            GestureDetector(
+                                onTap: _clearSearch,
+                                child: const Padding(
+                                    padding: EdgeInsets.all(12),
+                                    child: Icon(Icons.close_rounded,
+                                        color: AppColors.textThird, size: 18)))
+                          else
+                            const SizedBox(width: 14),
+                        ]),
                       ),
-                    ),
+                      const SizedBox(height: 12),
+                      AnimatedBuilder(
+                        animation: _catController,
+                        builder: (_, __) => Opacity(
+                            opacity: _catOpacity.value,
+                            child: Transform.scale(
+                                scale: _catScale.value,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14, vertical: 10),
+                                  decoration: BoxDecoration(
+                                      gradient: LinearGradient(colors: [
+                                        AppColors.purple.withOpacity(0.1),
+                                        AppColors.cyan.withOpacity(0.06)
+                                      ]),
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: Border.all(
+                                          color: AppColors.purple
+                                              .withOpacity(0.2))),
+                                  child: Row(children: [
+                                    Image.asset(AppConstants.cat6,
+                                        width: 40,
+                                        height: 40,
+                                        fit: BoxFit.contain),
+                                    const SizedBox(width: 10),
+                                    const Expanded(
+                                        child: Text(
+                                            '"Try searching your favorite artist..."',
+                                            style: TextStyle(
+                                                fontSize: 11,
+                                                color: AppColors.purple3,
+                                                fontStyle: FontStyle.italic))),
+                                  ]),
+                                ))),
+                      ),
+                      const SizedBox(height: 20),
+                      if (_isSearching)
+                        _buildSearchResults(l)
+                      else ...[
+                        _buildCategories(l),
+                        const SizedBox(height: 20),
+                        _buildTrending(l),
+                      ],
+                    ],
                   ),
                 ),
-                const FeevoBottomNav(currentIndex: 1),
-              ],
+              ),
             ),
-          ),
-        ],
-      ),
+            const FeevoBottomNav(currentIndex: 1),
+          ]),
+        ),
+      ]),
     );
   }
 
-  Widget _buildCategories() {
+  Widget _buildCategories(AppLocalizations l) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('Browse Categories',
-          style: TextStyle(
+      Text(l.browseCategories,
+          style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary)),
@@ -327,7 +313,7 @@ class _SearchScreenState extends State<SearchScreen>
     ]);
   }
 
-  Widget _buildTrending() {
+  Widget _buildTrending(AppLocalizations l) {
     return Consumer<DeezerProvider>(
       builder: (context, deezer, _) {
         final tracks = deezer.topCharts;
@@ -338,10 +324,9 @@ class _SearchScreenState extends State<SearchScreen>
                   child: CircularProgressIndicator(
                       color: AppColors.purple, strokeWidth: 2)));
         if (tracks.isEmpty) return const SizedBox();
-
         return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('🔥 Trending Now',
-              style: TextStyle(
+          Text('🔥 ${l.trending}',
+              style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary)),
@@ -430,22 +415,21 @@ class _SearchScreenState extends State<SearchScreen>
           ])),
       child: const Center(child: Text('🎵', style: TextStyle(fontSize: 18))));
 
-  Widget _buildSearchResults() {
+  Widget _buildSearchResults(AppLocalizations l) {
     return Consumer<DeezerProvider>(
       builder: (context, deezer, _) {
         if (deezer.isSearching)
-          return const Center(
+          return Center(
               child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40),
+                  padding: const EdgeInsets.symmetric(vertical: 40),
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    CircularProgressIndicator(
+                    const CircularProgressIndicator(
                         color: AppColors.purple, strokeWidth: 2),
-                    SizedBox(height: 12),
-                    Text('Searching...',
-                        style: TextStyle(
+                    const SizedBox(height: 12),
+                    Text(l.searching,
+                        style: const TextStyle(
                             fontSize: 12, color: AppColors.textSecond))
                   ])));
-
         if (deezer.searchError != null)
           return Center(
               child: Padding(
@@ -472,7 +456,7 @@ class _SearchScreenState extends State<SearchScreen>
                     color: AppColors.textPrimary)),
             const SizedBox(height: 8),
             const Text('Try a different search term',
-                style: TextStyle(fontSize: 12, color: AppColors.textSecond))
+                style: TextStyle(fontSize: 12, color: AppColors.textSecond)),
           ]);
 
         return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

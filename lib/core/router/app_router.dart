@@ -142,7 +142,14 @@ GoRouter createAppRouter(AuthProvider authProvider) {
       ),
       GoRoute(path: AppRoutes.createRoom,   name: 'create-room',      builder: (c, s) => const CreateRoomScreen()),
       GoRoute(path: AppRoutes.memoryMap,    name: 'memory-map',       builder: (c, s) => const MemoryMapScreen()),
-      GoRoute(path: AppRoutes.memoryDetail, name: 'memory-detail',    builder: (c, s) => const MemoryDetailScreen()),
+      GoRoute(
+        path: AppRoutes.memoryDetail,
+        name: 'memory-detail',
+        builder: (c, s) {
+          final id = s.uri.queryParameters['id'] ?? '';
+          return MemoryDetailScreen(memoryId: id);
+        },
+      ),
       GoRoute(path: AppRoutes.profile,      name: 'profile',          builder: (c, s) => const ProfileScreen()),
       GoRoute(path: AppRoutes.settings,     name: 'settings',         builder: (c, s) => const SettingsScreen()),
       GoRoute(path: AppRoutes.notifications,name: 'notifications',    builder: (c, s) => const NotificationsScreen()),

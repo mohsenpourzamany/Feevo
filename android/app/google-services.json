@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "892534807606",
+    "project_id": "feevo-2c31e",
+    "storage_bucket": "feevo-2c31e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:892534807606:android:df271eafbed54baa244c97",
+        "android_client_info": {
+          "package_name": "com.example.feevo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC6VNAE-zBATMkY8UsQco9bKYqGfFPS5jc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

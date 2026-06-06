@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/router/app_router.dart';
 import '../../core/widgets/bottom_nav_widget.dart';
+import '../../core/services/audio_player_service.dart';
 import '../../core/providers/deezer_provider.dart';
 import '../../core/providers/live_room_provider.dart';
 import '../../core/providers/user_provider.dart';
-import '../../core/services/audio_player_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -54,14 +55,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (mounted) _contentController.forward();
     });
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final service = context.read<AudioPlayerService>();
-      if (service.currentTrack == null)
-        service.loadQueue(FeevoTrack.mockTracks);
+      final deezer = context.read<DeezerProvider>();
+
       // Load real data
-      context.read<DeezerProvider>().loadTopCharts();
+      await deezer.loadTopCharts(limit: 20);
       context.read<LiveRoomProvider>().fetchRooms();
       context.read<UserProvider>().fetchProfile();
+
+      // Load Deezer charts into queue
+      if (service.currentTrack == null && deezer.topCharts.isNotEmpty) {
+        final feevoTracks = deezer.topCharts
+            .map((t) => FeevoTrack(
+                  id: t.id,
+                  title: t.title,
+                  artist: t.artist,
+                  album: t.album,
+                  emoji: '🎵',
+                  url: t.previewUrl ?? '',
+                  artworkUrl: t.albumArt,
+                ))
+            .toList();
+        service.loadQueue(feevoTracks);
+      }
     });
   }
 
@@ -74,16 +91,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  String _greeting() {
+  String _greeting(AppLocalizations l) {
     final h = DateTime.now().hour;
-    if (h < 12) return 'Good morning ☀️';
-    if (h < 17) return 'Good afternoon 🌤';
-    if (h < 21) return 'Good evening 🌙';
-    return 'Good night 🌙';
+    if (h < 12) return l.goodMorning;
+    if (h < 17) return l.goodAfternoon;
+    if (h < 21) return l.goodEvening;
+    return l.goodNight;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: Stack(
@@ -124,15 +142,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       child: ListView(
                         padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                         children: [
-                          _buildGreeting(),
+                          _buildGreeting(l),
                           const SizedBox(height: 16),
                           _buildNowPlaying(),
                           const SizedBox(height: 20),
-                          _buildMoodStrip(),
+                          _buildMoodStrip(l),
                           const SizedBox(height: 20),
-                          _buildTopCharts(),
+                          _buildTopCharts(l),
                           const SizedBox(height: 20),
-                          _buildLiveRooms(),
+                          _buildLiveRooms(l),
                         ],
                       ),
                     ),
@@ -147,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildGreeting() {
+  Widget _buildGreeting(AppLocalizations l) {
     return Consumer<UserProvider>(
       builder: (context, up, _) {
         final name = up.user?.name.isNotEmpty == true
@@ -177,15 +195,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                Text(_greeting(),
+                Text(_greeting(l),
                     style: const TextStyle(
                         fontSize: 11, color: AppColors.textSecond)),
                 const SizedBox(height: 2),
                 RichText(
                     text: TextSpan(children: [
-                  const TextSpan(
-                      text: 'Hey, ',
-                      style: TextStyle(
+                  TextSpan(
+                      text: '${l.hey} ',
+                      style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
@@ -210,8 +228,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           color: AppColors.textPrimary)),
                 ])),
                 const SizedBox(height: 2),
-                const Text('What are we feeling today?',
-                    style: TextStyle(fontSize: 11, color: AppColors.purple3)),
+                Text(l.whatAreWeFeeling,
+                    style: const TextStyle(
+                        fontSize: 11, color: AppColors.purple3)),
               ])),
           GestureDetector(
             onTap: () => context.push(AppRoutes.notifications),
@@ -425,19 +444,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildMoodStrip() {
+  Widget _buildMoodStrip(AppLocalizations l) {
     final moods = AppConstants.moods;
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        const Text('🌊 Mood Flow',
-            style: TextStyle(
+        Text('🌊 ${l.moodFlow}',
+            style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary)),
         GestureDetector(
             onTap: () => context.go(AppRoutes.moodFlow),
-            child: const Text('See all',
-                style: TextStyle(fontSize: 11, color: AppColors.purple3))),
+            child: Text(l.seeAll,
+                style:
+                    const TextStyle(fontSize: 11, color: AppColors.purple3))),
       ]),
       const SizedBox(height: 10),
       SizedBox(
@@ -479,21 +499,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     ]);
   }
 
-  Widget _buildTopCharts() {
+  Widget _buildTopCharts(AppLocalizations l) {
     return Consumer<DeezerProvider>(
       builder: (context, deezer, _) {
         final tracks = deezer.topCharts;
         return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            const Text('🔥 Top Charts',
-                style: TextStyle(
+            Text('🔥 ${l.topCharts}',
+                style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary)),
             GestureDetector(
                 onTap: () => context.push(AppRoutes.search),
-                child: const Text('See all',
-                    style: TextStyle(fontSize: 11, color: AppColors.purple3))),
+                child: Text(l.seeAll,
+                    style: const TextStyle(
+                        fontSize: 11, color: AppColors.purple3))),
           ]),
           const SizedBox(height: 10),
           if (deezer.isLoadingCharts)
@@ -576,21 +597,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           gradient: AppColors.primaryGradient),
       child: const Center(child: Text('🎵', style: TextStyle(fontSize: 36))));
 
-  Widget _buildLiveRooms() {
+  Widget _buildLiveRooms(AppLocalizations l) {
     return Consumer<LiveRoomProvider>(
       builder: (context, lp, _) {
         final rooms = lp.rooms.take(3).toList();
         return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            const Text('🏠 Live Rooms',
-                style: TextStyle(
+            Text('🏠 ${l.liveRooms}',
+                style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary)),
             GestureDetector(
                 onTap: () => context.go(AppRoutes.liveRooms),
-                child: const Text('See all',
-                    style: TextStyle(fontSize: 11, color: AppColors.purple3))),
+                child: Text(l.seeAll,
+                    style: const TextStyle(
+                        fontSize: 11, color: AppColors.purple3))),
           ]),
           const SizedBox(height: 10),
           if (lp.isLoadingRooms)
@@ -606,10 +628,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: AppColors.border)),
-                child: const Center(
-                    child: Text(
-                        'No live rooms right now\nBe the first to go live!',
-                        style: TextStyle(
+                child: Center(
+                    child: Text(l.noLiveRooms,
+                        style: const TextStyle(
                             fontSize: 12,
                             color: AppColors.textSecond,
                             height: 1.6),
