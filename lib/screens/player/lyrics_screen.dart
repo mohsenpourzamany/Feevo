@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/services/audio_player_service.dart';
@@ -46,7 +47,6 @@ class _LyricsScreenState extends State<LyricsScreen>
     Future.delayed(const Duration(milliseconds: 150), () {
       if (mounted) _contentController.forward();
     });
-
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadLyrics());
   }
 
@@ -68,19 +68,16 @@ class _LyricsScreenState extends State<LyricsScreen>
       });
       return;
     }
-
     setState(() {
       _isLoading = true;
       _error = null;
     });
-
     try {
       final artist = Uri.encodeComponent(track.artist);
       final title = Uri.encodeComponent(track.title);
-      final url = 'https://api.lyrics.ovh/v1/$artist/$title';
-      final response =
-          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
-
+      final response = await http
+          .get(Uri.parse('https://api.lyrics.ovh/v1/$artist/$title'))
+          .timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final raw = data['lyrics'] as String? ?? '';
@@ -106,7 +103,7 @@ class _LyricsScreenState extends State<LyricsScreen>
 
   void _scrollToLine(int index) {
     if (!_scrollCtrl.hasClients) return;
-    final itemHeight = 52.0;
+    const itemHeight = 52.0;
     final offset =
         (index * itemHeight) - (MediaQuery.of(context).size.height * 0.3);
     _scrollCtrl.animateTo(
@@ -117,6 +114,7 @@ class _LyricsScreenState extends State<LyricsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final track = context.watch<AudioPlayerService>().currentTrack;
 
     return Scaffold(
@@ -146,7 +144,6 @@ class _LyricsScreenState extends State<LyricsScreen>
           child: FadeTransition(
             opacity: _contentOpacity,
             child: Column(children: [
-              // header
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                 child: Row(children: [
@@ -162,8 +159,8 @@ class _LyricsScreenState extends State<LyricsScreen>
                           child: const Icon(Icons.keyboard_arrow_down_rounded,
                               color: AppColors.textSecond, size: 22))),
                   const Spacer(),
-                  const Text('LYRICS',
-                      style: TextStyle(
+                  Text(l.lyrics.toUpperCase(),
+                      style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textSecond,
@@ -185,23 +182,19 @@ class _LyricsScreenState extends State<LyricsScreen>
                   ),
                 ]),
               ),
-
               const SizedBox(height: 16),
-
-              // track info
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(13),
-                    child: track?.artworkUrl != null
-                        ? Image.network(track!.artworkUrl!,
-                            width: 48,
-                            height: 48,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => _artFallback())
-                        : _artFallback(),
-                  ),
+                      borderRadius: BorderRadius.circular(13),
+                      child: track?.artworkUrl != null
+                          ? Image.network(track!.artworkUrl!,
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => _artFallback())
+                          : _artFallback()),
                   const SizedBox(width: 12),
                   Expanded(
                       child: Column(
@@ -219,32 +212,25 @@ class _LyricsScreenState extends State<LyricsScreen>
                       ])),
                   if (!_isLoading && _error == null)
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                          gradient: AppColors.primaryGradient,
-                          borderRadius: BorderRadius.circular(999)),
-                      child:
-                          const Row(mainAxisSize: MainAxisSize.min, children: [
-                        Icon(Icons.lyrics_outlined,
-                            color: Colors.white, size: 12),
-                        SizedBox(width: 4),
-                        Text('Found',
-                            style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white)),
-                      ]),
-                    ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                            gradient: AppColors.primaryGradient,
+                            borderRadius: BorderRadius.circular(999)),
+                        child: Row(mainAxisSize: MainAxisSize.min, children: [
+                          const Icon(Icons.lyrics_outlined,
+                              color: Colors.white, size: 12),
+                          const SizedBox(width: 4),
+                          const Text('Found',
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white))
+                        ])),
                 ]),
               ),
-
               const SizedBox(height: 16),
-
-              // content
-              Expanded(child: _buildContent()),
-
-              // controls
+              Expanded(child: _buildContent(l)),
               Consumer<AudioPlayerService>(
                 builder: (context, service, _) => Padding(
                   padding: const EdgeInsets.fromLTRB(28, 0, 28, 28),
@@ -255,27 +241,26 @@ class _LyricsScreenState extends State<LyricsScreen>
                             icon: Icons.skip_previous_rounded,
                             onTap: () => service.playPrevious()),
                         GestureDetector(
-                          onTap: () => service.togglePlay(),
-                          child: Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: AppColors.primaryGradient,
-                                  boxShadow: [
-                                    BoxShadow(
-                                        color:
-                                            AppColors.purple.withOpacity(0.5),
-                                        blurRadius: 20,
-                                        offset: const Offset(0, 6))
-                                  ]),
-                              child: Icon(
-                                  service.isPlaying
-                                      ? Icons.pause_rounded
-                                      : Icons.play_arrow_rounded,
-                                  color: Colors.white,
-                                  size: 28)),
-                        ),
+                            onTap: () => service.togglePlay(),
+                            child: Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: AppColors.primaryGradient,
+                                    boxShadow: [
+                                      BoxShadow(
+                                          color:
+                                              AppColors.purple.withOpacity(0.5),
+                                          blurRadius: 20,
+                                          offset: const Offset(0, 6))
+                                    ]),
+                                child: Icon(
+                                    service.isPlaying
+                                        ? Icons.pause_rounded
+                                        : Icons.play_arrow_rounded,
+                                    color: Colors.white,
+                                    size: 28))),
                         _CtrlBtn(
                             icon: Icons.skip_next_rounded,
                             onTap: () => service.playNext()),
@@ -289,22 +274,22 @@ class _LyricsScreenState extends State<LyricsScreen>
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(AppLocalizations l) {
     if (_isLoading)
-      return const Center(
+      return Center(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-        CircularProgressIndicator(color: AppColors.purple, strokeWidth: 2),
-        SizedBox(height: 16),
-        Text('Finding lyrics...',
-            style: TextStyle(fontSize: 12, color: AppColors.textSecond)),
+        const CircularProgressIndicator(
+            color: AppColors.purple, strokeWidth: 2),
+        const SizedBox(height: 16),
+        Text(l.searching,
+            style: const TextStyle(fontSize: 12, color: AppColors.textSecond))
       ]));
-
     if (_error != null)
       return Center(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
         Image.asset(AppConstants.cat5, width: 80, height: 80),
         const SizedBox(height: 12),
-        Text(_error!,
+        Text(l.lyricsNotFound,
             style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -315,18 +300,18 @@ class _LyricsScreenState extends State<LyricsScreen>
             style: TextStyle(fontSize: 11, color: AppColors.textSecond)),
         const SizedBox(height: 16),
         GestureDetector(
-          onTap: _loadLyrics,
-          child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(999)),
-              child: const Text('Retry',
-                  style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white))),
-        ),
+            onTap: _loadLyrics,
+            child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    borderRadius: BorderRadius.circular(999)),
+                child: Text(l.retry,
+                    style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white)))),
       ]));
 
     return Column(children: [
@@ -341,46 +326,45 @@ class _LyricsScreenState extends State<LyricsScreen>
                 const Color(0xFF0D0520).withOpacity(0)
               ]))),
       Expanded(
-        child: ListView.builder(
-          controller: _scrollCtrl,
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          itemCount: _lines.length,
-          itemBuilder: (context, i) {
-            final isCurrent = i == _currentLine;
-            final isPast = i < _currentLine;
-            return GestureDetector(
-              onTap: () {
-                setState(() => _currentLine = i);
-                _scrollToLine(i);
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                padding: EdgeInsets.symmetric(
-                    vertical: isCurrent ? 14 : 10, horizontal: 12),
-                margin: const EdgeInsets.only(bottom: 2),
-                decoration: BoxDecoration(
+          child: ListView.builder(
+        controller: _scrollCtrl,
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        itemCount: _lines.length,
+        itemBuilder: (context, i) {
+          final isCurrent = i == _currentLine;
+          final isPast = i < _currentLine;
+          return GestureDetector(
+            onTap: () {
+              setState(() => _currentLine = i);
+              _scrollToLine(i);
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              padding: EdgeInsets.symmetric(
+                  vertical: isCurrent ? 14 : 10, horizontal: 12),
+              margin: const EdgeInsets.only(bottom: 2),
+              decoration: BoxDecoration(
                   gradient: isCurrent
                       ? LinearGradient(colors: [
                           AppColors.purple.withOpacity(0.15),
                           AppColors.cyan.withOpacity(0.06)
                         ])
                       : null,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(children: [
-                  if (isCurrent) ...[
-                    Container(
-                        width: 3,
-                        height: 28,
-                        decoration: BoxDecoration(
-                            gradient: AppColors.primaryGradient,
-                            borderRadius: BorderRadius.circular(999))),
-                    const SizedBox(width: 10),
-                  ],
-                  Expanded(
-                      child: AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 300),
-                    style: TextStyle(
+                  borderRadius: BorderRadius.circular(12)),
+              child: Row(children: [
+                if (isCurrent) ...[
+                  Container(
+                      width: 3,
+                      height: 28,
+                      decoration: BoxDecoration(
+                          gradient: AppColors.primaryGradient,
+                          borderRadius: BorderRadius.circular(999))),
+                  const SizedBox(width: 10)
+                ],
+                Expanded(
+                    child: AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 300),
+                  style: TextStyle(
                       fontSize: isCurrent ? 18 : 14,
                       fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w400,
                       color: isCurrent
@@ -388,16 +372,14 @@ class _LyricsScreenState extends State<LyricsScreen>
                           : isPast
                               ? AppColors.textThird
                               : AppColors.textSecond,
-                      height: 1.5,
-                    ),
-                    child: Text(_lines[i]),
-                  )),
-                ]),
-              ),
-            );
-          },
-        ),
-      ),
+                      height: 1.5),
+                  child: Text(_lines[i]),
+                )),
+              ]),
+            ),
+          );
+        },
+      )),
       Container(
           height: 20,
           decoration: BoxDecoration(

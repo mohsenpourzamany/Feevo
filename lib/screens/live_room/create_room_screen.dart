@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/router/app_router.dart';
@@ -72,7 +73,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen>
     super.dispose();
   }
 
-  Future<void> _goLive() async {
+  Future<void> _goLive(AppLocalizations l) async {
     if (_nameCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: const Text('Please enter a room name'),
@@ -83,17 +84,13 @@ class _CreateRoomScreenState extends State<CreateRoomScreen>
       return;
     }
     setState(() => _isLoading = true);
-
     final room = await context.read<LiveRoomProvider>().createRoom(
-          name: _nameCtrl.text.trim(),
-          vibe: _selectedVibe,
-          privacy: _selectedPrivacy,
-          aiDjEnabled: _aiDjEnabled,
-        );
-
+        name: _nameCtrl.text.trim(),
+        vibe: _selectedVibe,
+        privacy: _selectedPrivacy,
+        aiDjEnabled: _aiDjEnabled);
     if (!mounted) return;
     setState(() => _isLoading = false);
-
     if (room != null) {
       context.go('${AppRoutes.liveRoomIn}?id=${room.id}');
     } else {
@@ -108,6 +105,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: Stack(children: [
@@ -132,7 +130,6 @@ class _CreateRoomScreenState extends State<CreateRoomScreen>
               child: ListView(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
                   children: [
-                    // header
                     Row(children: [
                       GestureDetector(
                           onTap: () => context.pop(),
@@ -146,17 +143,14 @@ class _CreateRoomScreenState extends State<CreateRoomScreen>
                               child: const Icon(Icons.close_rounded,
                                   color: AppColors.textSecond, size: 18))),
                       const SizedBox(width: 14),
-                      const Text('Create Room 🎙️',
-                          style: TextStyle(
+                      Text('${l.rooms} 🎙️',
+                          style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w800,
                               color: AppColors.textPrimary,
                               letterSpacing: -0.3)),
                     ]),
-
                     const SizedBox(height: 20),
-
-                    // cat
                     Center(
                         child: AnimatedBuilder(
                       animation:
@@ -172,17 +166,13 @@ class _CreateRoomScreenState extends State<CreateRoomScreen>
                                       height: 100,
                                       fit: BoxFit.contain)))),
                     )),
-
                     const SizedBox(height: 20),
-
                     FeevoInput(
                         label: 'Room Name',
                         placeholder: 'e.g. Late Night Chill 🌙',
                         controller: _nameCtrl,
                         validator: (_) => null),
-
                     const SizedBox(height: 18),
-
                     const Text('Vibe',
                         style: TextStyle(
                             fontSize: 11,
@@ -191,65 +181,60 @@ class _CreateRoomScreenState extends State<CreateRoomScreen>
                             letterSpacing: .5)),
                     const SizedBox(height: 8),
                     Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _vibes.map((v) {
-                        final active = _selectedVibe == v['id'];
-                        return GestureDetector(
-                          onTap: () => setState(() => _selectedVibe = v['id']!),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 9),
-                            decoration: BoxDecoration(
-                              gradient: active
-                                  ? LinearGradient(colors: [
-                                      AppColors.purple.withOpacity(0.3),
-                                      AppColors.cyan.withOpacity(0.15)
-                                    ])
-                                  : null,
-                              color: active ? null : AppColors.surface,
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(
-                                  color: active
-                                      ? AppColors.purple2
-                                      : AppColors.border,
-                                  width: active ? 1.5 : 1),
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _vibes.map((v) {
+                          final active = _selectedVibe == v['id'];
+                          return GestureDetector(
+                            onTap: () =>
+                                setState(() => _selectedVibe = v['id']!),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 9),
+                              decoration: BoxDecoration(
+                                  gradient: active
+                                      ? LinearGradient(colors: [
+                                          AppColors.purple.withOpacity(0.3),
+                                          AppColors.cyan.withOpacity(0.15)
+                                        ])
+                                      : null,
+                                  color: active ? null : AppColors.surface,
+                                  borderRadius: BorderRadius.circular(999),
+                                  border: Border.all(
+                                      color: active
+                                          ? AppColors.purple2
+                                          : AppColors.border,
+                                      width: active ? 1.5 : 1)),
+                              child: Text('${v['emoji']} ${v['label']}',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: active
+                                          ? AppColors.purple3
+                                          : AppColors.textSecond)),
                             ),
-                            child: Text('${v['emoji']} ${v['label']}',
-                                style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: active
-                                        ? AppColors.purple3
-                                        : AppColors.textSecond)),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-
+                          );
+                        }).toList()),
                     const SizedBox(height: 18),
-
-                    // AI DJ toggle
                     GestureDetector(
                       onTap: () => setState(() => _aiDjEnabled = !_aiDjEnabled),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          gradient: _aiDjEnabled
-                              ? LinearGradient(colors: [
-                                  AppColors.purple.withOpacity(0.18),
-                                  AppColors.cyan.withOpacity(0.08)
-                                ])
-                              : null,
-                          color: _aiDjEnabled ? null : AppColors.surface,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                              color: _aiDjEnabled
-                                  ? AppColors.border2
-                                  : AppColors.border),
-                        ),
+                            gradient: _aiDjEnabled
+                                ? LinearGradient(colors: [
+                                    AppColors.purple.withOpacity(0.18),
+                                    AppColors.cyan.withOpacity(0.08)
+                                  ])
+                                : null,
+                            color: _aiDjEnabled ? null : AppColors.surface,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                                color: _aiDjEnabled
+                                    ? AppColors.border2
+                                    : AppColors.border)),
                         child: Row(children: [
                           Image.asset(AppConstants.cat1,
                               width: 44, height: 44, fit: BoxFit.contain),
@@ -296,9 +281,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen>
                         ]),
                       ),
                     ),
-
                     const SizedBox(height: 18),
-
                     const Text('Privacy',
                         style: TextStyle(
                             fontSize: 11,
@@ -323,14 +306,11 @@ class _CreateRoomScreenState extends State<CreateRoomScreen>
                           onTap: () =>
                               setState(() => _selectedPrivacy = 'private')),
                     ]),
-
                     const SizedBox(height: 28),
-
                     FeevoButton(
                         label: '🎙️ Go Live Now',
-                        onTap: _goLive,
+                        onTap: () => _goLive(l),
                         isLoading: _isLoading),
-
                     const SizedBox(height: 12),
                     const Center(
                         child: Text(

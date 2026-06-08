@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
@@ -675,11 +677,26 @@ class _ProfileScreenState extends State<ProfileScreen>
                                       letterSpacing: 1.5)),
                               const SizedBox(height: 8),
                               _Item(Icons.star_outline_rounded, l.rateFeevo,
-                                  () {}),
+                                  () async {
+                                const url =
+                                    'https://apps.apple.com/app/idYOUR_APP_ID';
+                                if (await canLaunchUrl(Uri.parse(url)))
+                                  await launchUrl(Uri.parse(url),
+                                      mode: LaunchMode.externalApplication);
+                              }),
                               _Item(Icons.share_outlined, l.shareWithFriends,
-                                  () {}),
+                                  () {
+                                Share.share(
+                                    '🎵 Check out Feevo — AI-powered music app!\n\nFeel the music. Live the vibe.\n\nhttps://feevo.music',
+                                    subject: 'Feevo Music App');
+                              }),
                               _Item(Icons.help_outline_rounded, l.helpSupport,
-                                  () {}),
+                                  () async {
+                                const url =
+                                    'mailto:support@feevo.music?subject=Feevo Support';
+                                if (await canLaunchUrl(Uri.parse(url)))
+                                  await launchUrl(Uri.parse(url));
+                              }),
 
                               const SizedBox(height: 16),
                               GestureDetector(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/providers/live_room_provider.dart';
@@ -39,7 +40,6 @@ class _LiveRoomInsideScreenState extends State<LiveRoomInsideScreen>
       ..repeat(reverse: true);
     _pulse = Tween<double>(begin: 0.96, end: 1.04).animate(
         CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut));
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<LiveRoomProvider>().joinRoom(widget.roomId);
     });
@@ -52,16 +52,14 @@ class _LiveRoomInsideScreenState extends State<LiveRoomInsideScreen>
     _catController.dispose();
     _waveController.dispose();
     _pulseController.dispose();
-    // leaveRoom رو از dispose حذف کردیم - حالا فقط توی Leave button هست
     super.dispose();
   }
 
   void _shareRoom(LiveRoom? room) {
     if (room == null) return;
     Share.share(
-      '🎵 Join me in "${room.name}" on Feevo!\n\nListen together live 🔴\n\nfeevo://live-room?id=${room.id}\n\nDownload Feevo: https://feevo.music',
-      subject: 'Join ${room.name} on Feevo',
-    );
+        '🎵 Join me in "${room.name}" on Feevo!\n\nListen together live 🔴\n\nfeevo://live-room?id=${room.id}\n\nDownload Feevo: https://feevo.music',
+        subject: 'Join ${room.name} on Feevo');
   }
 
   void _sendMessage() {
@@ -75,12 +73,12 @@ class _LiveRoomInsideScreenState extends State<LiveRoomInsideScreen>
     });
   }
 
-  void _sendReaction(String emoji) {
-    context.read<LiveRoomProvider>().sendMessage(emoji);
-  }
+  void _sendReaction(String emoji) =>
+      context.read<LiveRoomProvider>().sendMessage(emoji);
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Consumer<LiveRoomProvider>(
       builder: (context, provider, _) {
         final room = provider.currentRoom;
@@ -115,7 +113,6 @@ class _LiveRoomInsideScreenState extends State<LiveRoomInsideScreen>
                                 ])))))),
             SafeArea(
               child: Column(children: [
-                // top bar
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                   child: Row(children: [
@@ -137,35 +134,33 @@ class _LiveRoomInsideScreenState extends State<LiveRoomInsideScreen>
                                   fontSize: 10, color: AppColors.textSecond)),
                         ])),
                     GestureDetector(
-                      onTap: () => _shareRoom(room),
-                      child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                              gradient: AppColors.primaryGradient,
-                              borderRadius: BorderRadius.circular(999)),
-                          child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.share_outlined,
-                                    color: Colors.white, size: 12),
-                                SizedBox(width: 4),
-                                Text('Invite',
-                                    style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white)),
-                              ])),
-                    ),
+                        onTap: () => _shareRoom(room),
+                        child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                                gradient: AppColors.primaryGradient,
+                                borderRadius: BorderRadius.circular(999)),
+                            child:
+                                Row(mainAxisSize: MainAxisSize.min, children: [
+                              const Icon(Icons.share_outlined,
+                                  color: Colors.white, size: 12),
+                              const SizedBox(width: 4),
+                              Text(l.invite,
+                                  style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white))
+                            ]))),
+                    const SizedBox(width: 8),
                     GestureDetector(
                       onTap: () async {
                         await provider.leaveRoom();
                         if (mounted) {
-                          if (context.canPop()) {
+                          if (context.canPop())
                             context.pop();
-                          } else {
+                          else
                             context.go('/live-rooms');
-                          }
                         }
                       },
                       child: Container(
@@ -176,16 +171,14 @@ class _LiveRoomInsideScreenState extends State<LiveRoomInsideScreen>
                               borderRadius: BorderRadius.circular(999),
                               border: Border.all(
                                   color: AppColors.error.withOpacity(0.3))),
-                          child: const Text('Leave',
-                              style: TextStyle(
+                          child: Text(l.leave,
+                              style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.error))),
                     ),
                   ]),
                 ),
-
-                // AI DJ card
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                   child: Container(
@@ -243,18 +236,16 @@ class _LiveRoomInsideScreenState extends State<LiveRoomInsideScreen>
                     ]),
                   ),
                 ),
-
-                // wave
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 6),
                   child: SizedBox(
-                    height: 32,
-                    child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: List.generate(
-                            24,
-                            (i) => AnimatedBuilder(
+                      height: 32,
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: List.generate(
+                              24,
+                              (i) => AnimatedBuilder(
                                   animation: _waveController,
                                   builder: (_, __) {
                                     final t = (_waveController.value - i * 0.04)
@@ -280,12 +271,8 @@ class _LiveRoomInsideScreenState extends State<LiveRoomInsideScreen>
                                                   AppColors.cyan
                                                       .withOpacity(0.7)
                                                 ])));
-                                  },
-                                ))),
-                  ),
+                                  })))),
                 ),
-
-                // reactions
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
@@ -299,47 +286,42 @@ class _LiveRoomInsideScreenState extends State<LiveRoomInsideScreen>
                           '🌙',
                           '💗'
                         ].map((e) => GestureDetector(
-                              onTap: () => _sendReaction(e),
-                              child: Container(
-                                  width: 42,
-                                  height: 38,
-                                  decoration: BoxDecoration(
-                                      color: AppColors.surface,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border:
-                                          Border.all(color: AppColors.border)),
-                                  child: Center(
-                                      child: Text(e,
-                                          style:
-                                              const TextStyle(fontSize: 18)))),
-                            )),
+                            onTap: () => _sendReaction(e),
+                            child: Container(
+                                width: 42,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                    color: AppColors.surface,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border:
+                                        Border.all(color: AppColors.border)),
+                                child: Center(
+                                    child: Text(e,
+                                        style:
+                                            const TextStyle(fontSize: 18)))))),
                         GestureDetector(
-                          onTap: () => setState(() => _chatOpen = !_chatOpen),
-                          child: Container(
-                              width: 42,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                  gradient: _chatOpen
-                                      ? AppColors.primaryGradient
-                                      : null,
-                                  color: _chatOpen ? null : AppColors.surface,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                      color: _chatOpen
-                                          ? AppColors.purple2
-                                          : AppColors.border)),
-                              child: Icon(Icons.chat_bubble_outline_rounded,
-                                  color: _chatOpen
-                                      ? Colors.white
-                                      : AppColors.textThird,
-                                  size: 18)),
-                        ),
+                            onTap: () => setState(() => _chatOpen = !_chatOpen),
+                            child: Container(
+                                width: 42,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                    gradient: _chatOpen
+                                        ? AppColors.primaryGradient
+                                        : null,
+                                    color: _chatOpen ? null : AppColors.surface,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                        color: _chatOpen
+                                            ? AppColors.purple2
+                                            : AppColors.border)),
+                                child: Icon(Icons.chat_bubble_outline_rounded,
+                                    color: _chatOpen
+                                        ? Colors.white
+                                        : AppColors.textThird,
+                                    size: 18))),
                       ]),
                 ),
-
                 const SizedBox(height: 8),
-
-                // chat
                 if (_chatOpen)
                   Expanded(
                       child: Container(
@@ -349,9 +331,9 @@ class _LiveRoomInsideScreenState extends State<LiveRoomInsideScreen>
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: AppColors.border)),
                     child: messages.isEmpty
-                        ? const Center(
-                            child: Text('Be the first to say something! 👋',
-                                style: TextStyle(
+                        ? Center(
+                            child: Text(l.saySomething,
+                                style: const TextStyle(
                                     fontSize: 12, color: AppColors.textSecond)))
                         : ListView.builder(
                             controller: _scrollCtrl,
@@ -363,71 +345,77 @@ class _LiveRoomInsideScreenState extends State<LiveRoomInsideScreen>
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 6),
                                 child: Row(
-                                  mainAxisAlignment: isMe
-                                      ? MainAxisAlignment.end
-                                      : MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    if (!isMe) ...[
-                                      Container(
-                                          width: 24,
-                                          height: 24,
-                                          decoration: const BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              gradient:
-                                                  AppColors.primaryGradient),
-                                          child: const Center(
-                                              child: Text('🎵',
+                                    mainAxisAlignment: isMe
+                                        ? MainAxisAlignment.end
+                                        : MainAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      if (!isMe) ...[
+                                        Container(
+                                            width: 24,
+                                            height: 24,
+                                            decoration: const BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                gradient:
+                                                    AppColors.primaryGradient),
+                                            child: const Center(
+                                                child: Text('🎵',
+                                                    style: TextStyle(
+                                                        fontSize: 12)))),
+                                        const SizedBox(width: 6)
+                                      ],
+                                      Flexible(
+                                          child: Column(
+                                              crossAxisAlignment: isMe
+                                                  ? CrossAxisAlignment.end
+                                                  : CrossAxisAlignment.start,
+                                              children: [
+                                            if (!isMe)
+                                              Text(msg.username,
+                                                  style: const TextStyle(
+                                                      fontSize: 9,
+                                                      color: AppColors.purple3,
+                                                      fontWeight:
+                                                          FontWeight.w600)),
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 6),
+                                              decoration: BoxDecoration(
+                                                  gradient: isMe
+                                                      ? AppColors
+                                                          .primaryGradient
+                                                      : null,
+                                                  color: isMe
+                                                      ? null
+                                                      : AppColors.surface2,
+                                                  borderRadius:
+                                                      BorderRadius.only(
+                                                          topLeft: const Radius
+                                                              .circular(12),
+                                                          topRight: const Radius
+                                                              .circular(12),
+                                                          bottomLeft:
+                                                              Radius.circular(
+                                                                  isMe
+                                                                      ? 12
+                                                                      : 2),
+                                                          bottomRight:
+                                                              Radius.circular(
+                                                                  isMe
+                                                                      ? 2
+                                                                      : 12))),
+                                              child: Text(msg.message,
                                                   style: TextStyle(
-                                                      fontSize: 12)))),
-                                      const SizedBox(width: 6),
-                                    ],
-                                    Flexible(
-                                        child: Column(
-                                            crossAxisAlignment: isMe
-                                                ? CrossAxisAlignment.end
-                                                : CrossAxisAlignment.start,
-                                            children: [
-                                          if (!isMe)
-                                            Text(msg.username,
-                                                style: const TextStyle(
-                                                    fontSize: 9,
-                                                    color: AppColors.purple3,
-                                                    fontWeight:
-                                                        FontWeight.w600)),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 10, vertical: 6),
-                                            decoration: BoxDecoration(
-                                                gradient: isMe
-                                                    ? AppColors.primaryGradient
-                                                    : null,
-                                                color: isMe
-                                                    ? null
-                                                    : AppColors.surface2,
-                                                borderRadius: BorderRadius.only(
-                                                    topLeft:
-                                                        const Radius.circular(
-                                                            12),
-                                                    topRight:
-                                                        const Radius.circular(
-                                                            12),
-                                                    bottomLeft: Radius.circular(
-                                                        isMe ? 12 : 2),
-                                                    bottomRight:
-                                                        Radius.circular(
-                                                            isMe ? 2 : 12))),
-                                            child: Text(msg.message,
-                                                style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: isMe
-                                                        ? Colors.white
-                                                        : AppColors
-                                                            .textPrimary)),
-                                          ),
-                                        ])),
-                                  ],
-                                ),
+                                                      fontSize: 12,
+                                                      color: isMe
+                                                          ? Colors.white
+                                                          : AppColors
+                                                              .textPrimary)),
+                                            ),
+                                          ])),
+                                    ]),
                               );
                             },
                           ),
@@ -444,14 +432,12 @@ class _LiveRoomInsideScreenState extends State<LiveRoomInsideScreen>
                                 color: AppColors.surface,
                                 borderRadius: BorderRadius.circular(14),
                                 border: Border.all(color: AppColors.border)),
-                            child: const Center(
-                                child: Text('Tap to open chat 💬',
-                                    style: TextStyle(
+                            child: Center(
+                                child: Text(l.saySomething,
+                                    style: const TextStyle(
                                         fontSize: 12,
                                         color: AppColors.textSecond))))),
                   ),
-
-                // chat input
                 if (_chatOpen)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
@@ -467,14 +453,14 @@ class _LiveRoomInsideScreenState extends State<LiveRoomInsideScreen>
                             controller: _chatCtrl,
                             style: const TextStyle(
                                 fontSize: 13, color: AppColors.textPrimary),
-                            decoration: const InputDecoration(
-                                hintText: 'Say something...',
-                                hintStyle: TextStyle(
+                            decoration: InputDecoration(
+                                hintText: l.saySomething,
+                                hintStyle: const TextStyle(
                                     fontSize: 12, color: AppColors.textThird),
                                 border: InputBorder.none,
                                 isDense: true,
                                 contentPadding:
-                                    EdgeInsets.symmetric(vertical: 12)),
+                                    const EdgeInsets.symmetric(vertical: 12)),
                             onSubmitted: (_) => _sendMessage()),
                       )),
                       const SizedBox(width: 8),
