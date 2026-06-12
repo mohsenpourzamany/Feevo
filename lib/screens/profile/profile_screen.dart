@@ -644,11 +644,26 @@ class _ProfileScreenState extends State<ProfileScreen>
                                       color: AppColors.textPrimary)),
                               const SizedBox(height: 10),
                               Row(children: [
-                                _Genre('🎹', 'Electronic', 42),
+                                _Genre(
+                                    '🎹',
+                                    'Electronic',
+                                    42,
+                                    () => context.go(
+                                        '${AppRoutes.search}?q=Electronic')),
                                 const SizedBox(width: 8),
-                                _Genre('🌙', 'Lo-Fi', 28),
+                                _Genre(
+                                    '🌙',
+                                    'Lo-Fi',
+                                    28,
+                                    () => context
+                                        .go('${AppRoutes.search}?q=Lo-Fi')),
                                 const SizedBox(width: 8),
-                                _Genre('🔥', 'Pop', 18),
+                                _Genre(
+                                    '🔥',
+                                    'Pop',
+                                    18,
+                                    () => context
+                                        .go('${AppRoutes.search}?q=Pop')),
                               ]),
 
                               const SizedBox(height: 20),
@@ -692,10 +707,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                               }),
                               _Item(Icons.help_outline_rounded, l.helpSupport,
                                   () async {
-                                const url =
-                                    'mailto:support@feevo.music?subject=Feevo Support';
+                                const url = 'https://feevo.music/support';
                                 if (await canLaunchUrl(Uri.parse(url)))
-                                  await launchUrl(Uri.parse(url));
+                                  await launchUrl(Uri.parse(url),
+                                      mode: LaunchMode.externalApplication);
                               }),
 
                               const SizedBox(height: 16),
@@ -896,27 +911,29 @@ Widget _Stat(String v, String l) => Expanded(
       Text(l, style: const TextStyle(fontSize: 9, color: AppColors.textThird))
     ]));
 Widget _Sep() => Container(width: 1, height: 30, color: AppColors.border);
-Widget _Genre(String e, String l, int p) => Expanded(
-    child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [
-              AppColors.purple.withOpacity(0.15),
-              AppColors.cyan.withOpacity(0.07)
-            ]),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.border2)),
-        child: Column(children: [
-          Text(e, style: const TextStyle(fontSize: 20)),
-          const SizedBox(height: 4),
-          Text(l,
-              style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary)),
-          Text('$p%',
-              style: const TextStyle(fontSize: 9, color: AppColors.purple3))
-        ])));
+Widget _Genre(String e, String l, int p, VoidCallback onTap) => Expanded(
+    child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [
+                  AppColors.purple.withOpacity(0.15),
+                  AppColors.cyan.withOpacity(0.07)
+                ]),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.border2)),
+            child: Column(children: [
+              Text(e, style: const TextStyle(fontSize: 20)),
+              const SizedBox(height: 4),
+              Text(l,
+                  style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary)),
+              Text('$p%',
+                  style: const TextStyle(fontSize: 9, color: AppColors.purple3))
+            ]))));
 Widget _Item(IconData icon, String label, VoidCallback onTap,
         {String? value}) =>
     GestureDetector(

@@ -1,48 +1,46 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:youtube_explode_dart/youtube_explode_dart.dart';
+import 'package:http/http.dart' as http;
 
 class YouTubeService {
-  final YoutubeExplode _yt = YoutubeExplode();
+  static const String _serverUrl =
+      'https://web-production-9ed2c.up.railway.app/stream';
 
-  // ── Get stream URL for a track ────────────────────────────────
+  final Map<String, String> _cache = {};
+
   Future<String?> getStreamUrl(String trackTitle, String artist) async {
     try {
-      final query   = '$trackTitle $artist official audio';
-      final results = await _yt.search.search(query);
+      debugPrint('Railway: requesting stream for "$trackTitle"');
 
-      if (results.isEmpty) {
-        debugPrint('YouTube: no results for "$query"');
-        return null;
+      final response = await http.post(
+        Uri.parse(_serverUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'title': trackTitle, 'artist': artist}),
+      ).timeout(const Duration(seconds: 20));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final url  = data['url'] as String?;
+        if (url != null) {
+          debugPrint('Railway: got stream for "$trackTitle"');
+          return url;
+        }
       }
-
-      // اولین نتیجه رو بگیر
-      final video    = results.first;
-      final manifest = await _yt.videos.streamsClient.getManifest(video.id);
-
-      // بهترین audio stream رو انتخاب کن
-      final audioStreams = manifest.audioOnly.sortByBitrate();
-      if (audioStreams.isEmpty) return null;
-
-      final streamUrl = audioStreams.last.url.toString();
-      debugPrint('YouTube: found stream for "${video.title}"');
-      return streamUrl;
+      debugPrint('Railway: failed ${response.statusCode}');
+      return null;
     } catch (e) {
-      debugPrint('YouTubeService error: $e');
+      debugPrint('Railway error: $e');
       return null;
     }
   }
 
-  // ── Cache برای جلوگیری از request مکرر ───────────────────────
-  final Map<String, String> _cache = {};
-
   Future<String?> getStreamUrlCached(String trackTitle, String artist) async {
     final key = '$trackTitle-$artist';
     if (_cache.containsKey(key)) return _cache[key];
-
     final url = await getStreamUrl(trackTitle, artist);
     if (url != null) _cache[key] = url;
     return url;
   }
 
-  void dispose() => _yt.close();
+  void dispose() {}
 }

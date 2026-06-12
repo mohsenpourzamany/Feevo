@@ -1,7 +1,11 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:audio_service/audio_service.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'youtube_service.dart';
 
 // ── Track Model ───────────────────────────────────────────────
 class FeevoTrack {
@@ -24,7 +28,7 @@ class FeevoTrack {
   });
 
   MediaItem toMediaItem() => MediaItem(
-        id: url,
+        id: url.isNotEmpty ? url : id,
         title: title,
         artist: artist,
         album: album,
@@ -38,6 +42,7 @@ class FeevoTrack {
 // ── Audio Player Service ──────────────────────────────────────
 class AudioPlayerService extends ChangeNotifier {
   final AudioPlayer _player = AudioPlayer();
+  final YouTubeService _youtube = YouTubeService();
 
   List<FeevoTrack> _queue = [];
   int _currentIdx = 0;
@@ -47,19 +52,18 @@ class AudioPlayerService extends ChangeNotifier {
   AudioPlayer get player => _player;
   List<FeevoTrack> get queue => _queue;
   int get currentIndex => _currentIdx;
-
   int get currentIdx => _currentIdx;
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isPlaying => _player.playing;
   bool get hasPrevious => _currentIdx > 0;
   bool get hasNext => _currentIdx < _queue.length - 1;
-
   FeevoTrack? get currentTrack =>
       _queue.isNotEmpty ? _queue[_currentIdx] : null;
-
   Duration get position => _player.position;
   Duration get duration => _player.duration ?? Duration.zero;
+  double get volume => _player.volume;
+  LoopMode get loopMode => _player.loopMode;
 
   double get progress {
     final dur = duration.inMilliseconds;
@@ -78,12 +82,10 @@ class AudioPlayerService extends ChangeNotifier {
 
   void _init() {
     _player.playerStateStream.listen((state) {
-      if (state.processingState == ProcessingState.completed) {
+      if (state.processingState == ProcessingState.completed)
         _onTrackComplete();
-      }
       notifyListeners();
     });
-
     _player.positionStream.listen((_) => notifyListeners());
     _player.durationStream.listen((_) => notifyListeners());
   }
@@ -98,22 +100,19 @@ class AudioPlayerService extends ChangeNotifier {
     }
   }
 
-  // ── Load queue بدون پلی کردن ─────────────────────────────────
   void loadQueue(List<FeevoTrack> tracks) {
     if (tracks.isEmpty) return;
     _queue = tracks;
     _currentIdx = 0;
-    notifyListeners(); // فقط UI آپدیت میشه، پلی نمیشه
+    notifyListeners();
   }
 
-  // ── Play a single track ───────────────────────────────────────
   Future<void> playTrack(FeevoTrack track) async {
     _queue = [track];
     _currentIdx = 0;
     await _loadAndPlay(track);
   }
 
-  // ── Play a queue ──────────────────────────────────────────────
   Future<void> playQueue(List<FeevoTrack> tracks, {int startIndex = 0}) async {
     if (tracks.isEmpty) return;
     _queue = tracks;
@@ -121,38 +120,106 @@ class AudioPlayerService extends ChangeNotifier {
     await _loadAndPlay(_queue[_currentIdx]);
   }
 
-  // ── Load and play ─────────────────────────────────────────────
+  // ── Load and play — YouTube اول، Deezer fallback ─────────────
   Future<void> _loadAndPlay(FeevoTrack track) async {
     try {
       _isLoading = true;
       _error = null;
       notifyListeners();
 
-      if (track.url.isEmpty) {
-        _error = 'No preview available';
+      String? playUrl;
+
+      // ۱. سعی کن YouTube URL بگیر
+      debugPrint('AudioPlayer: trying YouTube for "${track.title}"');
+      playUrl = await _youtube.getStreamUrlCached(track.title, track.artist);
+
+      // ۲. اگه YouTube نشد، از Deezer preview استفاده کن
+      if (playUrl == null || playUrl.isEmpty) {
+        debugPrint(
+            'AudioPlayer: YouTube failed, falling back to Deezer preview');
+        playUrl = track.url;
+      }
+
+      if (playUrl.isEmpty) {
+        _error = 'No audio available';
         _isLoading = false;
         notifyListeners();
         return;
       }
 
-      await _player.setAudioSource(
-        AudioSource.uri(
-          Uri.parse(track.url),
-          tag: track.toMediaItem(),
-        ),
-      );
+      debugPrint(
+          'AudioPlayer: playing from ${playUrl.contains('railway.app') ? 'Railway' : playUrl.contains('googlevideo') ? 'YouTube' : 'Deezer'}: ${track.title}');
 
+      final isRailway = playUrl.contains('railway.app');
+      final isYouTube = playUrl.contains('googlevideo.com');
+
+      if (isRailway) {
+        // فایل رو دانلود کن به حافظه موقت iPhone
+        debugPrint('Railway: downloading file for "${track.title}"');
+        final httpClient = http.Client();
+        final response = await httpClient
+            .get(Uri.parse(playUrl))
+            .timeout(const Duration(seconds: 60));
+        httpClient.close();
+
+        if (response.statusCode == 200) {
+          final tempDir = await getTemporaryDirectory();
+          final tempFile = File('${tempDir.path}/${track.id}.m4a');
+          await tempFile.writeAsBytes(response.bodyBytes);
+          debugPrint('Railway: file saved, playing from local cache');
+
+          await _player.setAudioSource(
+            AudioSource.file(tempFile.path, tag: track.toMediaItem()),
+          );
+          await _player.play();
+        } else {
+          throw Exception('Download failed: ${response.statusCode}');
+        }
+      } else if (isYouTube) {
+        await _player.setAudioSource(
+          AudioSource.uri(
+            Uri.parse(playUrl),
+            tag: track.toMediaItem(),
+            headers: {
+              'User-Agent':
+                  'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)',
+              'Origin': 'https://www.youtube.com',
+              'Referer': 'https://www.youtube.com/',
+            },
+          ),
+        );
+      } else {
+        await _player.setAudioSource(
+          AudioSource.uri(
+            Uri.parse(playUrl),
+            tag: track.toMediaItem(),
+          ),
+        );
+      }
       await _player.play();
     } catch (e) {
       _error = 'Failed to load track: $e';
       debugPrint('AudioPlayerService error: $e');
+
+      // اگه YouTube URL خراب شد، Deezer رو امتحان کن
+      if (track.url.isNotEmpty) {
+        try {
+          debugPrint('AudioPlayer: retrying with Deezer preview...');
+          await _player.setAudioSource(
+            AudioSource.uri(Uri.parse(track.url), tag: track.toMediaItem()),
+          );
+          await _player.play();
+          _error = null;
+        } catch (e2) {
+          debugPrint('AudioPlayer: Deezer fallback also failed: $e2');
+        }
+      }
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  // ── Controls ──────────────────────────────────────────────────
   Future<void> play() async => await _player.play();
   Future<void> pause() async => await _player.pause();
 
@@ -160,7 +227,6 @@ class AudioPlayerService extends ChangeNotifier {
     if (_player.playing) {
       await pause();
     } else {
-      // اگه هنوز source لود نشده، اول لود کن
       if (currentTrack != null && duration == Duration.zero) {
         await _loadAndPlay(currentTrack!);
       } else {
@@ -216,14 +282,10 @@ class AudioPlayerService extends ChangeNotifier {
     notifyListeners();
   }
 
-  double get volume => _player.volume;
-
   Future<void> setLoopMode(LoopMode mode) async {
     await _player.setLoopMode(mode);
     notifyListeners();
   }
-
-  LoopMode get loopMode => _player.loopMode;
 
   void addToQueue(FeevoTrack track) {
     _queue.add(track);
@@ -232,7 +294,6 @@ class AudioPlayerService extends ChangeNotifier {
 
   void removeFromQueue(int index) {
     if (index < 0 || index >= _queue.length) return;
-    // If removing current track, ignore. Adjust current index when removing earlier items.
     if (index == _currentIdx) return;
     if (index < _currentIdx) _currentIdx--;
     _queue.removeAt(index);
@@ -254,6 +315,7 @@ class AudioPlayerService extends ChangeNotifier {
 
   @override
   void dispose() {
+    _youtube.dispose();
     _player.dispose();
     super.dispose();
   }
